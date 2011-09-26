@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd" version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd">
+	<portlet>
+		<portlet-name>1</portlet-name>
+		<display-name>AWS Import Data</display-name>
+		<portlet-class>com.liferay.awsimport.portlet.AWSImportPortlet</portlet-class>
+		<init-param>
+			<name>view-jsp</name>
+			<value>/view.jsp</value>
+		</init-param>
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+		</supports>
+		<portlet-info>
+			<title>AWS Import Data</title>
+			<short-title>AWS Import Data</short-title>
+			<keywords>AWS Import Data</keywords>
+		</portlet-info>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+	</portlet>
+	<custom-window-state>
+		<window-state>exclusive</window-state>
+	</custom-window-state>
+	<custom-window-state>
+		<window-state>pop_up</window-state>
+	</custom-window-state>
+</portlet-app>

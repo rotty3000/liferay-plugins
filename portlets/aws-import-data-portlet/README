@@ -1,0 +1,3 @@
+How to build the AWS webservice client:
+
+wsimport -d ./classes -s ./src  -p com.liferay.aws.client http://ecs.amazonaws.com/AWSECommerceService/2010-11-01/AWSECommerceService.wsdl .
