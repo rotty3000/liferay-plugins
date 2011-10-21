@@ -558,4 +558,4 @@ a:focus .callout-extraborder {
 
 @include widthSelector("device-os-android", 320px, 580px);
 @include widthSelector("device-os-iphone-os", 300px, 460px);
-@include widthSelector("unknown", 320px, 460px);
+@include widthSelector("unknown", 960px, 960px);
