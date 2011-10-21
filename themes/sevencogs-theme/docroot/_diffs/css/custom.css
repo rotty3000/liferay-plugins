@@ -207,6 +207,11 @@ a:focus {
 	@include border-radius(4px);
 }
 
+.home .callout-extraborder img {
+	height: auto !important;
+	width: 846px !important;
+}
+
 a:hover .callout-extraborder,
 a:focus .callout-extraborder {
 	@include background-image(linear-gradient(top left, #DDD, #EEE));
@@ -406,34 +411,64 @@ a:focus .callout-extraborder {
 	background: transparent;
 }
 
-/* -------- Mobile Views Function 320/480 -------- */
+/* -------- Custom Seven Cogs Web Content Mixin -------- */
 
-@mixin widthSelector($selector, $sWidth, $lWidth) {
+@mixin customContent($viewClass, $width){
+	&.#{$viewClass} {
+		.home .callout-extraborder img {
+			height: auto !important;
+			padding: 12px !important;
+			width: $width - 24px !important;
+		}
+	}
+}
+/* -------- Width Selector Mixin -------- */
+
+@mixin viewSelector($viewSelector, $width) {
+	&.#{$viewSelector} {
+		#wrapper {
+			margin: 20px auto 0;
+			width: $width !important;
+		}
+		.portlet-layout {
+			display: inline-block;
+			clear: both;
+			.portlet-column {
+				clear: both;
+				float: left;
+				padding: inherit 0 !important;
+				width: $width !important;
+				.portlet-column-content {
+					padding-left: 0;
+					padding-right: 0;
+				}
+			}
+		}
+		#navigation li {
+			width: $width !important;
+		}
+	}
+}
+
+/* -------- Width Selector Mixin -------- */
+
+@mixin widthSelector($selector, $sWidth, $mWidth, $lWidth) {
 	html.#{$selector}{
-		@if $selector != device-brand-desktop {
+		@if $selector != device-brand-unknown {	
 			
 /* -------- Custom Seven Cogs Web Content -------- */
-			
-			&.aui-view-320 {
-				.home .callout-extraborder img {
-					height: auto !important;
-					padding: 12px !important;
-					width: $sWidth - 24px !important;
-				}
-			}
-			&.aui-view-480 {
-				.home .callout-extraborder img {
-					height: auto !important;
-					padding: 12px !important;
-					width: $lWidth - 24px !important;
-				}
-			}
 
-/* -------- Seven Cogs Mobile Views -------- */
+			@include customContent("aui-view-4", $sWidth);
+			@include customContent("aui-view-320", $sWidth);
+			@include customContent("aui-view-480", $mWidth);
+			@include customContent("aui-view-720", $lWidth);
+
+/* -------- Seven Cogs Mobile Views -------- */	
 			
 			&.aui-view-4,
 			&.aui-view-320,
-			&.aui-view-480 {
+			&.aui-view-480,
+			&.aui-view-720 {
 				#navigation:after,
 				#navigation:before {
 					clear: both;
@@ -470,7 +505,7 @@ a:focus .callout-extraborder {
 								border-color: transparent transparent transparent transparent;
 								color: inherit;
 								display: block;
-								background: -moz-linear-gradient(#FDFDFD, #EEEEEE) repeat scroll 0 0 #EEEEEE;
+								@include background-image(linear-gradient(top left, #FDFDFD, #EEEEEE));
 								border-color: #CCCCCC;
 								border-style: solid;
 								border-width: 1px 1px 0;
@@ -497,58 +532,10 @@ a:focus .callout-extraborder {
 					display: none;
 				}
 			}
-			
-/* -------- Seven Cogs 320 View only -------- */
-			
-			&.aui-view-320 {
-				#wrapper {
-					margin: 20px auto 0;
-					width: $sWidth !important;
-				}
-				.portlet-layout {
-					display: inline-block;
-					clear: both;
-					.portlet-column {
-						clear: both;
-						float: left;
-						padding: inherit 0 !important;
-						width: $sWidth !important;
-						.portlet-column-content {
-							padding-left: 0;
-							padding-right: 0;
-						}
-					}
-				}
-				#navigation li {
-					width: $sWidth !important;
-				}
-			}
-			
-/* -------- Seven Cogs 480 View only -------- */
-			
-			&.aui-view-480 {
-				#wrapper {
-					margin: 20px auto 0;
-					width: $lWidth !important;
-				}
-				.portlet-layout {
-					display: inline-block;
-					clear: both;
-					.portlet-column {
-						clear: both;
-						float: left;
-						padding: inherit 0 !important;
-						width: $lWidth !important;
-						.portlet-column-content {
-							padding-left: 0;
-							padding-right: 0;
-						}
-					}
-				}
-				#navigation li {
-					width: $lWidth !important;
-				}
-			}
+			@include viewSelector("aui-view-4", $sWidth);
+			@include viewSelector("aui-view-320", $sWidth);
+			@include viewSelector("aui-view-480", $mWidth);
+			@include viewSelector("aui-view-720", $lWidth);
 		}
 	}
 }
@@ -556,6 +543,13 @@ a:focus .callout-extraborder {
 /* -------- Execute Mobile Function -------- */
 /* -------- (DEVICE CLASS, SM VIEW, LG VIEW) -------- */
 
-@include widthSelector("device-os-android", 320px, 580px);
-@include widthSelector("device-os-iphone-os", 300px, 460px);
-@include widthSelector("unknown", 960px, 960px);
+/* -------- To target specific mobile devices: -------- */
+/* -------- Download "wurfl-web" from liferay-plugins -------- */
+
+@include widthSelector("device-os-android.touch", 320px, 580px, 720px);
+@include widthSelector("device-os-iphone-os.touch", 300px, 460px, 720px);
+
+/* -------- Default Mobile -------- */
+
+@include widthSelector("device-brand-unknown", 960px, 960px, 960px);
+@include widthSelector("touch", 300px, 460px, 720px);
