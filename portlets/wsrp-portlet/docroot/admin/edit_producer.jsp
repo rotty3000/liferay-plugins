@@ -57,7 +57,7 @@ ServletContext portalServletContext = ServletContextPool.get(portalServletContex
 		<liferay-ui:message key="name" />
 	</td>
 	<td>
-		<liferay-ui:input-field model="<%= WSRPProducer.class %>" bean="<%= wsrpProducer %>" field="name" />
+		<liferay-ui:input-field bean="<%= wsrpProducer %>" field="name" model="<%= WSRPProducer.class %>" />
 	</td>
 </tr>
 <tr>
@@ -152,12 +152,12 @@ ServletContext portalServletContext = ServletContextPool.get(portalServletContex
 		%>
 
 		<liferay-ui:input-move-boxes
-			leftTitle="current"
-			rightTitle="available"
 			leftBoxName="currentPortletIds"
-			rightBoxName="availablePortletIds"
 			leftList="<%= leftList %>"
+			leftTitle="current"
+			rightBoxName="availablePortletIds"
 			rightList="<%= rightList %>"
+			rightTitle="available"
 		/>
 	</td>
 </tr>

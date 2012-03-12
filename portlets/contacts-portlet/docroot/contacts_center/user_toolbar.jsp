@@ -50,8 +50,8 @@ else if (SocialRelationLocalServiceUtil.hasRelation(themeDisplay.getUserId(), us
 		<c:when test="<%= SocialRequestLocalServiceUtil.hasRequest(themeDisplay.getUserId(), User.class.getName(), themeDisplay.getUserId(), SocialRelationConstants.TYPE_BI_CONNECTION, user2.getUserId(), SocialRequestConstants.STATUS_PENDING) %>">
 			<liferay-ui:icon
 				cssClass="disabled"
-				label="<%= true %>"
 				image="../social/coworker"
+				label="<%= true %>"
 				message="connection-requested"
 			/>
 		</c:when>
@@ -144,17 +144,6 @@ else if (SocialRelationLocalServiceUtil.hasRelation(themeDisplay.getUserId(), us
 	</c:when>
 </c:choose>
 
-<c:if test="<%= user.getUserId() == user2.getUserId() %>">
-	<liferay-ui:icon
-		cssClass="edit-profile"
-		image="edit"
-		label="<%= true %>"
-		message="edit-profile"
-		method="get"
-		url="javascript:;"
-	/>
-</c:if>
-
 <portlet:resourceURL id="exportVCard" var="exportURL">
 	<portlet:param name="userId" value="<%= String.valueOf(user2.getUserId()) %>" />
 </portlet:resourceURL>
@@ -167,41 +156,7 @@ else if (SocialRelationLocalServiceUtil.hasRelation(themeDisplay.getUserId(), us
 />
 
 <aui:script use="aui-base,aui-dialog,aui-dialog-iframe">
-	<c:if test="<%= user.getUserId() == user2.getUserId() %>">
-		var editProfile = A.one('.contacts-portlet .edit-profile');
-
-		if (editProfile) {
-			editProfile.on(
-				'click',
-				function(event) {
-					event.preventDefault();
-
-					var url = Liferay.Util.addParams('controlPanelCategory=<%= PortletCategoryKeys.MY %>', '<%= themeDisplay.getURLMyAccount().toString() %>');
-
-					var dialog = new A.Dialog(
-						{
-							align: {
-								node: null,
-								points: ['tc', 'tc']
-							},
-							constrain2view: true,
-							modal: true,
-							resizable: false,
-							title: '<liferay-ui:message key="edit-profile" />',
-							width: 950
-						}
-					).plug(
-						A.Plugin.DialogIframe,
-						{
-							uri: url
-						}
-					).render();
-				}
-			);
-		}
-	</c:if>
-
-	<liferay-portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>" var="viewSummaryURL">
+	<liferay-portlet:renderURL var="viewSummaryURL" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>">
 		<portlet:param name="mvcPath" value="/contacts_center/view_user.jsp" />
 		<portlet:param name="userId" value="<%= String.valueOf(user2.getUserId()) %>" />
 	</liferay-portlet:renderURL>

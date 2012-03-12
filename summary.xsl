@@ -1,128 +1,245 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet
+	version="2.0"
+	xmlns:str="http://xsltsl.org/string"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+>
+	<xsl:import href="http://xsltsl.sourceforge.net/modules/stdlib.xsl" />
+
 	<xsl:template match="/">
 		<html>
+			<head>
+				<script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js" type="text/javascript"></script>
+				<script type="text/javascript">
+					YUI().use(
+						'datatable',
+						function (Y) {
+							var pluginsCols = [
+								{
+									key: 'Artifact ID',
+									sortable: true
+								},
+								{
+									key: 'Name',
+									sortable: true
+								},
+								{
+									key: 'Type',
+									sortable: true
+								},
+								{
+									key: 'Tags',
+									sortable: true
+								},
+								{
+									key: 'Short Description',
+									sortable: true
+								},
+								{
+									key: 'Change Log',
+									sortable: true
+								},
+								{
+									key: 'Page URL',
+									sortable: true
+								},
+								{
+									key: 'Author',
+									sortable: true
+								},
+								{
+									key: 'Licenses',
+									sortable: true
+								},
+								{
+									key: 'Include in Bundle',
+									sortable: true
+								},
+								{
+									key: 'Labs',
+									sortable: true
+								},
+								{
+									key: 'Marketplace',
+									sortable: true
+								},
+								{
+									key: 'Standalone App',
+									sortable: true
+								},
+								{
+									key: 'Parent App',
+									sortable: true
+								},
+								{
+									key: 'Public',
+									sortable: true
+								},
+								{
+									key: 'Supported',
+									sortable: true
+								}
+							];
 
-		<body>
+							var pluginsData = [
+								<xsl:apply-templates select="plugins-summary/plugin" />
+							];
 
-		<table border="1">
-		<tr>
-			<th>
-				Artifact ID
-			</th>
-			<th>
-				Name
-			</th>
-			<th>
-				Type
-			</th>
-			<th>
-				Tags
-			</th>
-			<th>
-				Short Description
-			</th>
-			<th>
-				Change Log
-			</th>
-			<th>
-				Page URL
-			</th>
-			<th>
-				Author
-			</th>
-			<th>
-				Licenses
-			</th>
-		</tr>
+							var pluginsDataTable = new Y.DataTable.Base(
+								{
+									columnset: pluginsCols,
+									recordset: pluginsData,
+									plugins: [Y.Plugin.DataTableSort]
+								}
+							);
 
-		<xsl:apply-templates select="plugins-summary/plugin" />
+							pluginsDataTable.render("#plugins");
 
-		</table>
+							var authorsCols = [
+								{
+									key: 'Authors',
+									sortable: true
+								}
+							];
 
-		<br />
+							var authorsData = [
+								<xsl:apply-templates select="plugins-summary/author" />
+							];
 
-		<table cellpadding="0" cellspacing="0">
-		<tr>
-			<td valign="top">
-				<table border="1">
-				<tr>
-					<th>
-						Unique Authors
-					</th>
-				</tr>
+							var authorsDataTable = new Y.DataTable.Base(
+								{
+									columnset: authorsCols,
+									recordset: authorsData,
+									authors: [Y.Plugin.DataTableSort]
+								}
+							);
 
-				<xsl:apply-templates select="plugins-summary/author" />
+							authorsDataTable.render("#authors");
 
-				</table>
-			</td>
-			<td style="padding-left: 10px"></td>
-			<td valign="top">
-				<table border="1">
-				<tr>
-					<th>
-						Unique Licenses
-					</th>
-				</tr>
+							var licensesCols = [
+								{
+									key: 'Licenses',
+									sortable: true
+								}
+							];
 
-				<xsl:apply-templates select="plugins-summary/license" />
+							var licensesData = [
+								<xsl:apply-templates select="plugins-summary/license" />
+							];
 
-				</table>
-			</td>
-		</tr>
-		</table>
+							var licensesDataTable = new Y.DataTable.Base(
+								{
+									columnset: licensesCols,
+									recordset: licensesData,
+									licenses: [Y.Plugin.DataTableSort]
+								}
+							);
 
-		</body>
+							licensesDataTable.render("#licenses");
+						}
+					);
+				</script>
+			</head>
 
+			<body class="yui3-skin-sam">
+				<div id="plugins"></div>
+
+				<br />
+
+				<div id="authors"></div>
+
+				<br />
+
+				<div id="licenses"></div>
+			</body>
 		</html>
 	</xsl:template>
 
 	<xsl:template match="author">
-		<tr>
-			<td nowrap="nowrap">
-				<xsl:value-of select="current()" />
-			</td>
-		</tr>
+		{
+			'Authors': '<xsl:value-of select="current()" />'
+		}
+
+		<xsl:if test="position() != last()">
+			,
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="license">
-		<tr>
-			<td nowrap="nowrap">
-				<xsl:value-of select="current()" />
-			</td>
-		</tr>
+		{
+			'Licenses': '<xsl:value-of select="current()" />'
+		}
+
+		<xsl:if test="position() != last()">
+			,
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="plugin">
-		<tr>
-			<td nowrap="nowrap">
-				<xsl:value-of select="artifact-id" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="name" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="type" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="tags" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="short-description" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="change-log" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="page-url" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="author" />
-			</td>
-			<td nowrap="nowrap">
-				<xsl:value-of select="licenses" />
-			</td>
-		</tr>
+		{
+			'Artifact ID': '<xsl:value-of select="artifact-id" />',
+			'Name': '<xsl:value-of select="name" />',
+			'Type': '<xsl:value-of select="type" />',
+			'Tags': '<xsl:value-of select="tags" />',
+
+			'Short Description':
+				'<xsl:call-template name="str:subst">
+					<xsl:with-param name="text" select="normalize-space(short-description) "/>
+					<xsl:with-param name="replace">'</xsl:with-param>
+					<xsl:with-param name="with">\'</xsl:with-param>
+				</xsl:call-template>',
+
+			'Change Log': '<xsl:value-of select="change-log" />',
+			'Page URL': '<xsl:value-of select="page-url" />',
+			'Author': '<xsl:value-of select="author" />',
+			'Licenses': '<xsl:value-of select="licenses" />',
+
+			<xsl:apply-templates select="releng" />
+		}
+
+		<xsl:if test="position() != last()">
+			,
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template match="releng">
+		'Include in Bundle':
+			'<xsl:choose>
+				<xsl:when test="bundle = 'true'">Yes</xsl:when>
+				<xsl:otherwise>No</xsl:otherwise>
+			</xsl:choose>',
+
+		'Labs':
+			'<xsl:choose>
+				<xsl:when test="labs = 'true'">Yes</xsl:when>
+				<xsl:otherwise>No</xsl:otherwise>
+			</xsl:choose>',
+
+		'Marketplace':
+			'<xsl:choose>
+				<xsl:when test="marketplace = 'true'">Yes</xsl:when>
+				<xsl:otherwise>No</xsl:otherwise>
+			</xsl:choose>',
+
+		'Parent App': '<xsl:value-of select="parent-app" />',
+
+		'Standalone App':
+			'<xsl:choose>
+				<xsl:when test="standalone-app = 'true'">Yes</xsl:when>
+				<xsl:otherwise>No</xsl:otherwise>
+			</xsl:choose>',
+
+		'Public':
+			'<xsl:choose>
+				<xsl:when test="public = 'true'">Yes</xsl:when>
+				<xsl:otherwise>No</xsl:otherwise>
+			</xsl:choose>',
+
+		'Supported':
+			'<xsl:choose>
+				<xsl:when test="supported = 'true'">Yes</xsl:when>
+				<xsl:otherwise>No</xsl:otherwise>
+			</xsl:choose>'
 	</xsl:template>
 </xsl:stylesheet>

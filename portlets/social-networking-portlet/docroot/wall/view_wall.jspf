@@ -39,7 +39,7 @@
 		<input name="<portlet:namespace />redirect" type="hidden" value="<%= currentURL %>" />
 		<input name="<portlet:namespace />wallEntryId" type="hidden" value="" />
 
-		<liferay-ui:input-field model="<%= WallEntry.class %>" bean="<%= null %>" field="comments" />
+		<liferay-ui:input-field bean="<%= null %>" field="comments" model="<%= WallEntry.class %>" />
 
 		<br /><br />
 
@@ -108,9 +108,9 @@
 			<tr>
 				<td align="center" valign="top">
 					<liferay-ui:user-display
+						displayStyle="<%= 2 %>"
 						userId="<%= wallEntry.getUserId() %>"
 						userName="<%= wallEntry.getUserName() %>"
-						displayStyle="<%= 2 %>"
 					/>
 				</td>
 				<td valign="top" width="99%">
@@ -148,7 +148,7 @@
 									}
 								}
 
-								if ((Validator.isNotNull(wallLayoutFriendlyURL)) && (wallUser.getUserId() != themeDisplay.getUserId())) {
+								if (Validator.isNotNull(wallLayoutFriendlyURL) && (wallUser.getUserId() != themeDisplay.getUserId())) {
 									wallToWallHREF = themeDisplay.getPathFriendlyURLPublic() + StringPool.SLASH + wallUser.getScreenName() + wallLayoutFriendlyURL + "/-/wall/" + wallUser.getScreenName();
 								}
 							}
@@ -245,7 +245,7 @@
 							<%= LanguageUtil.format(pageContext, "you-need-to-approve-x-as-your-friend", HtmlUtil.escape(user2.getFirstName())) %>
 						</c:when>
 						<c:otherwise>
-							<liferay-portlet:actionURL var="addAsFriendURL" name="addFriend" portletName="1_WAR_socialnetworkingportlet">
+							<liferay-portlet:actionURL name="addFriend" portletName="1_WAR_socialnetworkingportlet" var="addAsFriendURL">
 								<portlet:param name="redirect" value='<%= currentURL %>' />
 							</liferay-portlet:actionURL>
 

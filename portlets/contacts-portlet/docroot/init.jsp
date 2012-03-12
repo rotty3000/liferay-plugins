@@ -29,7 +29,6 @@ page import="com.liferay.contacts.util.ContactsExtensionsUtil" %><%@
 page import="com.liferay.contacts.util.PortletKeys" %><%@
 page import="com.liferay.contacts.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
-page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.language.UnicodeLanguageUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayPortletResponse" %><%@
@@ -42,6 +41,7 @@ page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PrefsParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringPool" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
+page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.model.Address" %><%@
@@ -65,7 +65,6 @@ page import="com.liferay.portal.service.UserLocalServiceUtil" %><%@
 page import="com.liferay.portal.service.WebsiteServiceUtil" %><%@
 page import="com.liferay.portal.service.permission.UserPermissionUtil" %><%@
 page import="com.liferay.portal.util.PortalUtil" %><%@
-page import="com.liferay.portal.util.PortletCategoryKeys" %><%@
 page import="com.liferay.portal.util.comparator.UserLastNameComparator" %><%@
 page import="com.liferay.portal.util.comparator.UserLoginDateComparator" %><%@
 page import="com.liferay.portlet.PortletPreferencesFactoryUtil" %><%@
@@ -96,6 +95,7 @@ page import="javax.portlet.WindowState" %>
 <%
 WindowState windowState = renderRequest.getWindowState();
 
+
 PortletPreferences preferences = renderRequest.getPreferences();
 
 String portletResource = ParamUtil.getString(request, "portletResource");
@@ -113,10 +113,18 @@ int maxResultCount = 200;
 boolean showAdditionalEmailAddresses = PrefsParamUtil.getBoolean(preferences, request, "showAdditionalEmailAddresses", true);
 boolean showAddresses = PrefsParamUtil.getBoolean(preferences, request, "showAddresses", true);
 boolean showComments = PrefsParamUtil.getBoolean(preferences, request, "showComments", true);
+boolean showCompleteYourProfile = PrefsParamUtil.getBoolean(preferences, request, "showCompleteYourProfile", false);
 boolean showIcon = PrefsParamUtil.getBoolean(preferences, request, "showIcon", true);
 boolean showInstantMessenger = PrefsParamUtil.getBoolean(preferences, request, "showInstantMessenger", true);
 boolean showPhones = PrefsParamUtil.getBoolean(preferences, request, "showPhones", true);
 boolean showRecentActivity = PrefsParamUtil.getBoolean(preferences, request, "showRecentActivity", false);
+
+boolean showOnlySiteMembers = false;
+
+if (portletName.equals(PortletKeys.MEMBERS)) {
+	showOnlySiteMembers = true;
+}
+
 boolean showSites = PrefsParamUtil.getBoolean(preferences, request, "showSites", false);
 boolean showSMS = PrefsParamUtil.getBoolean(preferences, request, "showSMS", true);
 boolean showSocialNetwork = PrefsParamUtil.getBoolean(preferences, request, "showSocialNetwork", true);

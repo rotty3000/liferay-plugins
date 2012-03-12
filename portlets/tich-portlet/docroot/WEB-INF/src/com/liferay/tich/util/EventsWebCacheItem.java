@@ -51,7 +51,7 @@ public class EventsWebCacheItem implements WebCacheItem {
 				x = array[i].indexOf("<b>");
 				y = array[i].indexOf("</b>");
 
-				if (x != -1 && y != -1) {
+				if ((x != -1) && (y != -1)) {
 					int year = GetterUtil.getInteger(StringUtil.extractDigits(
 						array[i].substring(x + 3, y)));
 
@@ -59,8 +59,7 @@ public class EventsWebCacheItem implements WebCacheItem {
 						array[i].substring(y, array[i].length())).trim();
 
 					if (description.startsWith("- ")) {
-						description = description.substring(
-							2, description.length());
+						description = description.substring(2);
 					}
 
 					Event event = new Event(year, description);

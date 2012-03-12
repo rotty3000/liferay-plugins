@@ -174,7 +174,7 @@ if (comment) {
 			}
 			%>
 
-			<aui:select label="viewable-by" inlineLabel="true" name="socialRelationType">
+			<aui:select inlineLabel="true" label="viewable-by" name="socialRelationType">
 				<aui:option label="everyone" selected="<%= socialRelationType == MicroblogsEntryConstants.TYPE_EVERYONE %>" value="<%= MicroblogsEntryConstants.TYPE_EVERYONE %>" />
 				<aui:option label="connections" selected="<%= socialRelationType == SocialRelationConstants.TYPE_BI_CONNECTION %>" value="<%= SocialRelationConstants.TYPE_BI_CONNECTION %>" />
 				<aui:option label="followers" selected="<%= socialRelationType == SocialRelationConstants.TYPE_UNI_FOLLOWER %>" value="<%= SocialRelationConstants.TYPE_UNI_FOLLOWER %>" />
@@ -248,7 +248,7 @@ if (comment) {
 
 			var inputValue = '<%= ((microblogsEntry != null) && (edit)) ? StringUtil.replace(microblogsEntry.getContent(), "\'", "\\'") : StringPool.BLANK %>';
 
-			if (autocomplete.height() < 45 || highlighterContent.height() < 45) {
+			if ((autocomplete.height() < 45) || (highlighterContent.height() < 45)) {
 				autocomplete.height(45);
 
 				highlighterContent.height(45);

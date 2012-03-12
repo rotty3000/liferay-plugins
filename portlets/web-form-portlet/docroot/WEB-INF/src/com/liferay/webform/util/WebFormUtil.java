@@ -15,9 +15,6 @@
 package com.liferay.webform.util;
 
 import com.liferay.counter.service.CounterLocalServiceUtil;
-import com.liferay.mozilla.javascript.Context;
-import com.liferay.mozilla.javascript.Scriptable;
-import com.liferay.mozilla.javascript.ScriptableObject;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -44,6 +41,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletPreferences;
+
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 /**
  * @author Daniel Weisser
@@ -89,7 +90,7 @@ public class WebFormUtil {
 			String fieldType = preferences.getValue(
 				"fieldType" + i, StringPool.BLANK);
 
-			while ((i == 1) || (Validator.isNotNull(fieldLabel))) {
+			while ((i == 1) || Validator.isNotNull(fieldLabel)) {
 				if (!fieldType.equalsIgnoreCase("paragraph")) {
 					ExpandoColumnLocalServiceUtil.addColumn(
 						expandoTable.getTableId(), fieldLabel,
@@ -143,7 +144,7 @@ public class WebFormUtil {
 	}
 
 	public static String[] split(String s, String delimiter) {
-		if (s == null || delimiter == null) {
+		if ((s == null) || (delimiter == null)) {
 			return new String[0];
 		}
 

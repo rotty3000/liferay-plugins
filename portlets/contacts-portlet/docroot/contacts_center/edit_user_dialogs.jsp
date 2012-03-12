@@ -1,0 +1,162 @@
+<%--
+/**
+ * Copyright (c) 2000-2012 Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+--%>
+
+<%@ include file="/init.jsp" %>
+
+<%
+String redirect = ParamUtil.getString(request, "redirect");
+
+String curSectionId = ParamUtil.getString(request, "curSectionId");
+
+boolean extension = ParamUtil.getBoolean(request, "extension");
+
+User selUser = themeDisplay.getUser();
+
+Contact selContact = null;
+
+if (selUser != null) {
+	selContact = selUser.getContact();
+}
+%>
+
+<liferay-util:buffer var="html">
+
+	<%
+	String taglibOnSubmit = "event.preventDefault(); " + renderResponse.getNamespace() + "saveForm();";
+	%>
+
+	<div id="<portlet:namespace />updateUserDialog">
+		<aui:form action="" method="post" name="fm" onSubmit="<%= taglibOnSubmit %>">
+			<aui:input name="<%= Constants.CMD %>" type="hidden" value="updateFieldGroup" />
+			<aui:input name="redirect" type="hidden"  value="<%= redirect %>" />
+			<aui:input name="fieldGroup" type="hidden"  value="<%= curSectionId %>" />
+			<aui:input name="p_u_i_d" type="hidden" value="<%= (selUser != null) ? selUser.getUserId() : 0 %>" />
+
+			<%
+			request.setAttribute("user.selContact", selContact);
+			request.setAttribute("user.selUser", selUser);
+
+			request.setAttribute("addresses.className", Contact.class.getName());
+			request.setAttribute("emailAddresses.className", Contact.class.getName());
+			request.setAttribute("phones.className", Contact.class.getName());
+			request.setAttribute("websites.className", Contact.class.getName());
+
+			if (selContact != null) {
+				request.setAttribute("addresses.classPK", selContact.getContactId());
+				request.setAttribute("emailAddresses.classPK", selContact.getContactId());
+				request.setAttribute("phones.classPK", selContact.getContactId());
+				request.setAttribute("websites.classPK", selContact.getContactId());
+			}
+			else {
+				request.setAttribute("addresses.classPK", 0L);
+				request.setAttribute("emailAddresses.classPK", 0L);
+				request.setAttribute("phones.classPK", 0L);
+				request.setAttribute("websites.classPK", 0L);
+			}
+
+			String sectionJsp = "/html/portlet/users_admin/user/" + _getSectionJsp(curSectionId) + ".jsp";
+			%>
+
+			<div class="form-section selected" id="<portlet:namespace /><%= curSectionId %>">
+				<div id="<portlet:namespace />errorMessage"></div>
+
+				<liferay-util:include page="<%= sectionJsp %>" />
+			</div>
+
+			<aui:button-row>
+				<aui:button type="submit" />
+			</aui:button-row>
+		</aui:form>
+	</div>
+
+	<aui:script>
+		var <portlet:namespace />saveForm = function() {
+			var A = AUI();
+
+			var form = A.one('#<portlet:namespace />fm');
+
+			Liferay.fire(
+				'saveAutoFields',
+				{
+					form: form
+				}
+			);
+
+			<c:choose>
+				<c:when test="<%= extension %>">
+					var uri = '<liferay-portlet:actionURL portletName="<%= PortletKeys.USERS_ADMIN %>" windowState="<%= LiferayWindowState.NORMAL.toString() %>"><portlet:param name="struts_action" value="/users_admin/edit_user" /></liferay-portlet:actionURL>';
+				</c:when>
+				<c:otherwise>
+					var uri = '<liferay-portlet:actionURL />';
+				</c:otherwise>
+			</c:choose>
+
+			A.io.request(
+				uri,
+				{
+					dataType: 'json',
+					form: {
+						id: form
+					},
+					after: {
+						success: function(event, id, obj) {
+							var responseData = this.get('responseData');
+
+							if (!responseData.success) {
+								var message = A.one('#<portlet:namespace />errorMessage');
+
+								if (message) {
+									message.html('<span class="portlet-msg-error">' + responseData.message + '</span>');
+								}
+							}
+							else {
+								var redirect = responseData.redirect;
+
+								if (redirect) {
+									location.href = redirect;
+								}
+							}
+						}
+					}
+				}
+			);
+		}
+
+		AUI().ready(
+			'liferay-auto-fields',
+			function() {
+				Liferay.fire('formNavigator:reveal<portlet:namespace /><%= curSectionId %>');
+			}
+		);
+	</aui:script>
+</liferay-util:buffer>
+
+<c:choose>
+	<c:when test="<%= extension %>">
+		<%= StringUtil.replace(html, renderResponse.getNamespace(), "_" + PortletKeys.USERS_ADMIN + "_") %>
+	</c:when>
+	<c:otherwise>
+		<%= html %>
+	</c:otherwise>
+</c:choose>
+
+<%!
+private String _getSectionJsp(String curSectionId) {
+	String sectionJsp = TextFormatter.format(curSectionId, TextFormatter.K);
+
+	return TextFormatter.format(sectionJsp, TextFormatter.N);
+}
+%>

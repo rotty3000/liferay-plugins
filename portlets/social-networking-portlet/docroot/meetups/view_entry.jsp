@@ -118,7 +118,7 @@ int yesTotal = MeetupsRegistrationLocalServiceUtil.getMeetupsRegistrationsCount(
 
 		<br /><br />
 
-		<liferay-ui:input-field model="<%= MeetupsRegistration.class %>" bean="<%= meetupsRegistration %>" field="comments" />
+		<liferay-ui:input-field bean="<%= meetupsRegistration %>" field="comments" model="<%= MeetupsRegistration.class %>" />
 
 		<br /><br />
 
@@ -156,9 +156,9 @@ int yesTotal = MeetupsRegistrationLocalServiceUtil.getMeetupsRegistrationsCount(
 
 			<div class="response">
 				<liferay-ui:user-display
+					displayStyle="<%= 2 %>"
 					userId="<%= curMeetupsRegistration.getUserId() %>"
 					userName="<%= curMeetupsRegistration.getUserName() %>"
-					displayStyle="<%= 2 %>"
 				/>
 
 				<c:if test="<%= Validator.isNotNull(curMeetupsRegistration.getComments()) %>">

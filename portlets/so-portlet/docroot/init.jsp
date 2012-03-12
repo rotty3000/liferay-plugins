@@ -34,8 +34,10 @@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.json.JSONFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.json.JSONObject" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
+page import="com.liferay.portal.kernel.notifications.Channel" %><%@
 page import="com.liferay.portal.kernel.notifications.ChannelHubManagerUtil" %><%@
 page import="com.liferay.portal.kernel.notifications.NotificationEvent" %><%@
+page import="com.liferay.portal.kernel.notifications.UnknownChannelException" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayPortletResponse" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
@@ -116,6 +118,6 @@ page import="javax.portlet.WindowState" %>
 <%
 String currentURL = PortalUtil.getCurrentURL(request);
 
-Format dateFormatDate = FastDateFormatFactoryUtil.getSimpleDateFormat("MMM yyyy", locale, timeZone);
+Format dateFormatDate = FastDateFormatFactoryUtil.getSimpleDateFormat("dd MMM yyyy", locale, timeZone);
 Format timeFormatDate = FastDateFormatFactoryUtil.getTime(locale, timeZone);
 %>

@@ -50,7 +50,7 @@ else if (tabs1.equals("my-meetups")) {
 	addMeetupsEntryURL.setParameter("redirect", currentURL);
 	%>
 
-	<input type="button" value='<liferay-ui:message key="add-meetup" />' onClick='location.href = "<%= addMeetupsEntryURL.toString() %>"' />
+	<input onClick='location.href = "<%= addMeetupsEntryURL.toString() %>"' type="button" value='<liferay-ui:message key="add-meetup" />' />
 
 	<br /><br />
 </c:if>
@@ -130,16 +130,16 @@ for (int i = 0; i < meetupsEntries.size(); i++) {
 
 					<liferay-ui:icon
 						image="edit"
-						url="<%= editMeetupsEntryURL.toString() %>"
 						method="get"
+						url="<%= editMeetupsEntryURL.toString() %>"
 					/>
 				</c:if>
 
 				<liferay-ui:icon
 					image="join"
 					message="register"
-					url="<%= viewMeetupsEntryURL.toString() %>"
 					method="get"
+					url="<%= viewMeetupsEntryURL.toString() %>"
 				/>
 
 				<c:if test="<%= permissionChecker.isCompanyAdmin(company.getCompanyId()) %>">
