@@ -97,10 +97,12 @@ public class CalendarServiceSoap {
 		}
 	}
 
-	public static void deleteCalendar(long calendarId)
-		throws RemoteException {
+	public static com.liferay.calendar.model.CalendarSoap deleteCalendar(
+		long calendarId) throws RemoteException {
 		try {
-			CalendarServiceUtil.deleteCalendar(calendarId);
+			com.liferay.calendar.model.Calendar returnValue = CalendarServiceUtil.deleteCalendar(calendarId);
+
+			return com.liferay.calendar.model.CalendarSoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -140,6 +142,31 @@ public class CalendarServiceSoap {
 			com.liferay.calendar.model.Calendar returnValue = CalendarServiceUtil.updateCalendar(calendarId,
 					nameMap, descriptionMap, color, defaultCalendar,
 					serviceContext);
+
+			return com.liferay.calendar.model.CalendarSoap.toSoapModel(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.calendar.model.CalendarSoap updateCalendar(
+		long calendarId, java.lang.String[] nameMapLanguageIds,
+		java.lang.String[] nameMapValues,
+		java.lang.String[] descriptionMapLanguageIds,
+		java.lang.String[] descriptionMapValues, int color,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws RemoteException {
+		try {
+			Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(nameMapLanguageIds,
+					nameMapValues);
+			Map<Locale, String> descriptionMap = LocalizationUtil.getLocalizationMap(descriptionMapLanguageIds,
+					descriptionMapValues);
+
+			com.liferay.calendar.model.Calendar returnValue = CalendarServiceUtil.updateCalendar(calendarId,
+					nameMap, descriptionMap, color, serviceContext);
 
 			return com.liferay.calendar.model.CalendarSoap.toSoapModel(returnValue);
 		}

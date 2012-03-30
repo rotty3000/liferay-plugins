@@ -48,13 +48,13 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 			color, defaultCalendar, serviceContext);
 	}
 
-	public void deleteCalendar(long calendarId)
+	public Calendar deleteCalendar(long calendarId)
 		throws PortalException, SystemException {
 
 		CalendarPermission.check(
 			getPermissionChecker(), calendarId, ActionKeys.DELETE);
 
-		calendarLocalService.deleteCalendar(calendarId);
+		return calendarLocalService.deleteCalendar(calendarId);
 	}
 
 	public Calendar getCalendar(long calendarId)
@@ -78,6 +78,19 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 		return calendarLocalService.updateCalendar(
 			calendarId, nameMap, descriptionMap, color, defaultCalendar,
 			serviceContext);
+	}
+
+	public Calendar updateCalendar(
+			long calendarId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, int color,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		CalendarPermission.check(
+			getPermissionChecker(), calendarId, ActionKeys.UPDATE);
+
+		return calendarLocalService.updateCalendar(
+			calendarId, nameMap, descriptionMap, color, serviceContext);
 	}
 
 }

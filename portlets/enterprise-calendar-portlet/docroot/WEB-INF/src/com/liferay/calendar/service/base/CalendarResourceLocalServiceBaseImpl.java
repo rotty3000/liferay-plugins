@@ -23,6 +23,7 @@ import com.liferay.calendar.service.CalendarResourceService;
 import com.liferay.calendar.service.CalendarService;
 import com.liferay.calendar.service.persistence.CalendarBookingPersistence;
 import com.liferay.calendar.service.persistence.CalendarPersistence;
+import com.liferay.calendar.service.persistence.CalendarResourceFinder;
 import com.liferay.calendar.service.persistence.CalendarResourcePersistence;
 
 import com.liferay.counter.service.CounterLocalService;
@@ -34,11 +35,8 @@ import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.model.PersistedModel;
 import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
@@ -82,27 +80,12 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	 * @return the calendar resource that was added
 	 * @throws SystemException if a system exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public CalendarResource addCalendarResource(
 		CalendarResource calendarResource) throws SystemException {
 		calendarResource.setNew(true);
 
-		calendarResource = calendarResourcePersistence.update(calendarResource,
-				false);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.reindex(calendarResource);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
-
-		return calendarResource;
+		return calendarResourcePersistence.update(calendarResource, false);
 	}
 
 	/**
@@ -119,50 +102,29 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	 * Deletes the calendar resource with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param calendarResourceId the primary key of the calendar resource
+	 * @return the calendar resource that was removed
 	 * @throws PortalException if a calendar resource with the primary key could not be found
 	 * @throws SystemException if a system exception occurred
 	 */
-	public void deleteCalendarResource(long calendarResourceId)
+	@Indexable(type = IndexableType.DELETE)
+	public CalendarResource deleteCalendarResource(long calendarResourceId)
 		throws PortalException, SystemException {
-		CalendarResource calendarResource = calendarResourcePersistence.remove(calendarResourceId);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.delete(calendarResource);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
+		return calendarResourcePersistence.remove(calendarResourceId);
 	}
 
 	/**
 	 * Deletes the calendar resource from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param calendarResource the calendar resource
+	 * @return the calendar resource that was removed
 	 * @throws PortalException
 	 * @throws SystemException if a system exception occurred
 	 */
-	public void deleteCalendarResource(CalendarResource calendarResource)
+	@Indexable(type = IndexableType.DELETE)
+	public CalendarResource deleteCalendarResource(
+		CalendarResource calendarResource)
 		throws PortalException, SystemException {
-		calendarResourcePersistence.remove(calendarResource);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.delete(calendarResource);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
+		return calendarResourcePersistence.remove(calendarResource);
 	}
 
 	/**
@@ -302,6 +264,7 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	 * @return the calendar resource that was updated
 	 * @throws SystemException if a system exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public CalendarResource updateCalendarResource(
 		CalendarResource calendarResource) throws SystemException {
 		return updateCalendarResource(calendarResource, true);
@@ -315,28 +278,13 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	 * @return the calendar resource that was updated
 	 * @throws SystemException if a system exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public CalendarResource updateCalendarResource(
 		CalendarResource calendarResource, boolean merge)
 		throws SystemException {
 		calendarResource.setNew(false);
 
-		calendarResource = calendarResourcePersistence.update(calendarResource,
-				merge);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.reindex(calendarResource);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
-
-		return calendarResource;
+		return calendarResourcePersistence.update(calendarResource, merge);
 	}
 
 	/**
@@ -506,6 +454,25 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	public void setCalendarResourcePersistence(
 		CalendarResourcePersistence calendarResourcePersistence) {
 		this.calendarResourcePersistence = calendarResourcePersistence;
+	}
+
+	/**
+	 * Returns the calendar resource finder.
+	 *
+	 * @return the calendar resource finder
+	 */
+	public CalendarResourceFinder getCalendarResourceFinder() {
+		return calendarResourceFinder;
+	}
+
+	/**
+	 * Sets the calendar resource finder.
+	 *
+	 * @param calendarResourceFinder the calendar resource finder
+	 */
+	public void setCalendarResourceFinder(
+		CalendarResourceFinder calendarResourceFinder) {
+		this.calendarResourceFinder = calendarResourceFinder;
 	}
 
 	/**
@@ -714,6 +681,8 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	protected CalendarResourceService calendarResourceService;
 	@BeanReference(type = CalendarResourcePersistence.class)
 	protected CalendarResourcePersistence calendarResourcePersistence;
+	@BeanReference(type = CalendarResourceFinder.class)
+	protected CalendarResourceFinder calendarResourceFinder;
 	@BeanReference(type = CounterLocalService.class)
 	protected CounterLocalService counterLocalService;
 	@BeanReference(type = ResourceLocalService.class)
@@ -728,6 +697,5 @@ public abstract class CalendarResourceLocalServiceBaseImpl
 	protected UserService userService;
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
-	private static Log _log = LogFactoryUtil.getLog(CalendarResourceLocalServiceBaseImpl.class);
 	private String _beanIdentifier;
 }

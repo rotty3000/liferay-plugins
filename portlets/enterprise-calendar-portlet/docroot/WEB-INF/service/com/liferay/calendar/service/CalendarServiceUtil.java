@@ -51,10 +51,11 @@ public class CalendarServiceUtil {
 			descriptionMap, color, defaultCalendar, serviceContext);
 	}
 
-	public static void deleteCalendar(long calendarId)
+	public static com.liferay.calendar.model.Calendar deleteCalendar(
+		long calendarId)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		getService().deleteCalendar(calendarId);
+		return getService().deleteCalendar(calendarId);
 	}
 
 	public static com.liferay.calendar.model.Calendar getCalendar(
@@ -75,6 +76,18 @@ public class CalendarServiceUtil {
 		return getService()
 				   .updateCalendar(calendarId, nameMap, descriptionMap, color,
 			defaultCalendar, serviceContext);
+	}
+
+	public static com.liferay.calendar.model.Calendar updateCalendar(
+		long calendarId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		int color, com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return getService()
+				   .updateCalendar(calendarId, nameMap, descriptionMap, color,
+			serviceContext);
 	}
 
 	public static void clearService() {

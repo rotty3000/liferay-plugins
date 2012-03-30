@@ -23,6 +23,7 @@ import com.liferay.calendar.service.CalendarResourceService;
 import com.liferay.calendar.service.CalendarService;
 import com.liferay.calendar.service.persistence.CalendarBookingPersistence;
 import com.liferay.calendar.service.persistence.CalendarPersistence;
+import com.liferay.calendar.service.persistence.CalendarResourceFinder;
 import com.liferay.calendar.service.persistence.CalendarResourcePersistence;
 
 import com.liferay.counter.service.CounterLocalService;
@@ -36,11 +37,8 @@ import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.model.PersistedModel;
 import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
@@ -84,27 +82,12 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	 * @return the calendar booking that was added
 	 * @throws SystemException if a system exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public CalendarBooking addCalendarBooking(CalendarBooking calendarBooking)
 		throws SystemException {
 		calendarBooking.setNew(true);
 
-		calendarBooking = calendarBookingPersistence.update(calendarBooking,
-				false);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.reindex(calendarBooking);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
-
-		return calendarBooking;
+		return calendarBookingPersistence.update(calendarBooking, false);
 	}
 
 	/**
@@ -121,50 +104,29 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	 * Deletes the calendar booking with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param calendarBookingId the primary key of the calendar booking
+	 * @return the calendar booking that was removed
 	 * @throws PortalException if a calendar booking with the primary key could not be found
 	 * @throws SystemException if a system exception occurred
 	 */
-	public void deleteCalendarBooking(long calendarBookingId)
+	@Indexable(type = IndexableType.DELETE)
+	public CalendarBooking deleteCalendarBooking(long calendarBookingId)
 		throws PortalException, SystemException {
-		CalendarBooking calendarBooking = calendarBookingPersistence.remove(calendarBookingId);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.delete(calendarBooking);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
+		return calendarBookingPersistence.remove(calendarBookingId);
 	}
 
 	/**
 	 * Deletes the calendar booking from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param calendarBooking the calendar booking
+	 * @return the calendar booking that was removed
 	 * @throws PortalException
 	 * @throws SystemException if a system exception occurred
 	 */
-	public void deleteCalendarBooking(CalendarBooking calendarBooking)
+	@Indexable(type = IndexableType.DELETE)
+	public CalendarBooking deleteCalendarBooking(
+		CalendarBooking calendarBooking)
 		throws PortalException, SystemException {
-		calendarBookingPersistence.remove(calendarBooking);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.delete(calendarBooking);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
+		return calendarBookingPersistence.remove(calendarBooking);
 	}
 
 	/**
@@ -304,6 +266,7 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	 * @return the calendar booking that was updated
 	 * @throws SystemException if a system exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public CalendarBooking updateCalendarBooking(
 		CalendarBooking calendarBooking) throws SystemException {
 		return updateCalendarBooking(calendarBooking, true);
@@ -317,28 +280,13 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	 * @return the calendar booking that was updated
 	 * @throws SystemException if a system exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public CalendarBooking updateCalendarBooking(
 		CalendarBooking calendarBooking, boolean merge)
 		throws SystemException {
 		calendarBooking.setNew(false);
 
-		calendarBooking = calendarBookingPersistence.update(calendarBooking,
-				merge);
-
-		Indexer indexer = IndexerRegistryUtil.getIndexer(getModelClassName());
-
-		if (indexer != null) {
-			try {
-				indexer.reindex(calendarBooking);
-			}
-			catch (SearchException se) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(se, se);
-				}
-			}
-		}
-
-		return calendarBooking;
+		return calendarBookingPersistence.update(calendarBooking, merge);
 	}
 
 	/**
@@ -508,6 +456,25 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	public void setCalendarResourcePersistence(
 		CalendarResourcePersistence calendarResourcePersistence) {
 		this.calendarResourcePersistence = calendarResourcePersistence;
+	}
+
+	/**
+	 * Returns the calendar resource finder.
+	 *
+	 * @return the calendar resource finder
+	 */
+	public CalendarResourceFinder getCalendarResourceFinder() {
+		return calendarResourceFinder;
+	}
+
+	/**
+	 * Sets the calendar resource finder.
+	 *
+	 * @param calendarResourceFinder the calendar resource finder
+	 */
+	public void setCalendarResourceFinder(
+		CalendarResourceFinder calendarResourceFinder) {
+		this.calendarResourceFinder = calendarResourceFinder;
 	}
 
 	/**
@@ -734,6 +701,8 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	protected CalendarResourceService calendarResourceService;
 	@BeanReference(type = CalendarResourcePersistence.class)
 	protected CalendarResourcePersistence calendarResourcePersistence;
+	@BeanReference(type = CalendarResourceFinder.class)
+	protected CalendarResourceFinder calendarResourceFinder;
 	@BeanReference(type = CounterLocalService.class)
 	protected CounterLocalService counterLocalService;
 	@BeanReference(type = MailService.class)
@@ -750,6 +719,5 @@ public abstract class CalendarBookingLocalServiceBaseImpl
 	protected UserService userService;
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
-	private static Log _log = LogFactoryUtil.getLog(CalendarBookingLocalServiceBaseImpl.class);
 	private String _beanIdentifier;
 }

@@ -104,7 +104,7 @@ pageContext.setAttribute("portletURL", portletURL);
 
 					ExpandoBridge expandoBridge = group.getExpandoBridge();
 
-					boolean socialOfficeEnabled = GetterUtil.getBoolean(expandoBridge.getAttribute("socialOfficeEnabled"));
+					boolean socialOfficeEnabled = SocialOfficeServiceUtil.isSocialOfficeSite(group.getGroupId());
 
 					if (socialOfficeEnabled) {
 						className += "social-office-enabled ";
@@ -156,10 +156,10 @@ pageContext.setAttribute("portletURL", portletURL);
 										<portlet:param name="privateLayout" value="<%= String.valueOf(!group.hasPublicLayouts()) %>" />
 									</liferay-portlet:actionURL>
 
-									<a href="<%= siteURL %>"><%= group.getDescriptiveName(locale) %></a>
+									<a href="<%= siteURL %>"><%= HtmlUtil.escape(group.getDescriptiveName(locale)) %></a>
 								</c:when>
 								<c:otherwise>
-									<%= group.getDescriptiveName(locale) %>
+									<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>
 								</c:otherwise>
 							</c:choose>
 						</span>

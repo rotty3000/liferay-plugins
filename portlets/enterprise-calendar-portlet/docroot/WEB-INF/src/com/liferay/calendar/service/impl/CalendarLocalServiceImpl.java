@@ -86,11 +86,18 @@ public class CalendarLocalServiceImpl extends CalendarLocalServiceBaseImpl {
 
 		resourceLocalService.addModelResources(calendar, serviceContext);
 
+		// Calendar resource
+
+		if (defaultCalendar) {
+			calendarResourceLocalService.updateDefaultCalendarId(
+				calendarResourceId, calendarId);
+		}
+
 		return calendar;
 	}
 
 	@Override
-	public void deleteCalendar(Calendar calendar)
+	public Calendar deleteCalendar(Calendar calendar)
 		throws PortalException, SystemException {
 
 		// Calendar
@@ -100,22 +107,23 @@ public class CalendarLocalServiceImpl extends CalendarLocalServiceBaseImpl {
 		// Resources
 
 		resourceLocalService.deleteResource(
-			calendar.getCompanyId(), Calendar.class.getName(),
-			ResourceConstants.SCOPE_INDIVIDUAL, calendar.getCalendarId());
+			calendar, ResourceConstants.SCOPE_INDIVIDUAL);
 
 		// Calendar bookings
 
 		calendarBookingLocalService.deleteCalendarBookings(
 			calendar.getCalendarId());
+
+		return calendar;
 	}
 
 	@Override
-	public void deleteCalendar(long calendarId)
+	public Calendar deleteCalendar(long calendarId)
 		throws PortalException, SystemException {
 
 		Calendar calendar = calendarPersistence.findByPrimaryKey(calendarId);
 
-		deleteCalendar(calendar);
+		return deleteCalendar(calendar);
 	}
 
 	@Override
@@ -123,6 +131,13 @@ public class CalendarLocalServiceImpl extends CalendarLocalServiceBaseImpl {
 		throws PortalException, SystemException {
 
 		return calendarPersistence.findByPrimaryKey(calendarId);
+	}
+
+	public List<Calendar> getResourceCalendars(
+			long groupId, long calendarResourceId)
+		throws SystemException {
+
+		return calendarPersistence.findByG_C(groupId, calendarResourceId);
 	}
 
 	public List<Calendar> search(
@@ -170,11 +185,31 @@ public class CalendarLocalServiceImpl extends CalendarLocalServiceBaseImpl {
 
 		calendarPersistence.update(calendar, false);
 
+		// Calendar resource
+
+		if (defaultCalendar) {
+			calendarResourceLocalService.updateDefaultCalendarId(
+				calendar.getCalendarResourceId(), calendarId);
+		}
+
 		// Resources
 
 		resourceLocalService.updateModelResources(calendar, serviceContext);
 
 		return calendar;
+	}
+
+	public Calendar updateCalendar(
+			long calendarId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, int color,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		Calendar calendar = calendarPersistence.findByPrimaryKey(calendarId);
+
+		return updateCalendar(
+			calendarId, nameMap, descriptionMap, color,
+			calendar.isDefaultCalendar(), serviceContext);
 	}
 
 	protected DynamicQuery buildDynamicQuery(
