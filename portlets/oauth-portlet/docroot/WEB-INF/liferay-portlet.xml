@@ -3,12 +3,12 @@
 
 <liferay-portlet-app>
 	<portlet>
-		<portlet-name>oauth</portlet-name>
+		<portlet-name>OAuth Admin</portlet-name>
 		<icon>/icon.png</icon>
 		<instanceable>false</instanceable>
 		<header-portlet-css>/css/main.css</header-portlet-css>
 		<footer-portlet-javascript>/js/main.js</footer-portlet-javascript>
-		<css-class-wrapper>oauth-portlet</css-class-wrapper>
+		<css-class-wrapper>oauth registration-portlet</css-class-wrapper>
 	</portlet>
 	<role-mapper>
 		<role-name>administrator</role-name>
