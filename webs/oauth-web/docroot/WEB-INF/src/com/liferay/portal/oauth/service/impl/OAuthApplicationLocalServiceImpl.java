@@ -14,6 +14,8 @@
 
 package com.liferay.portal.oauth.service.impl;
 
+import java.util.List;
+
 import com.liferay.counter.service.CounterLocalServiceUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.DigesterUtil;
@@ -31,7 +33,7 @@ import com.liferay.portal.oauth.service.base.OAuthApplicationLocalServiceBaseImp
  * This is a local service. Methods of this service will not have security checks based on the propagated JAAS credentials because this service can only be accessed from within the same VM.
  * </p>
  *
- * @author Brian Wing Shun Chan
+ * @author Igor Beslic
  * @see com.liferay.portal.oauth.service.base.OAuthApplicationLocalServiceBaseImpl
  * @see com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil
  */
@@ -41,6 +43,13 @@ public class OAuthApplicationLocalServiceImpl
 	 * NOTE FOR DEVELOPERS:
 	 *
 	 * Never reference this interface directly. Always use {@link com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil} to access the o auth application local service.
+	 */
+	
+	/**
+	 * Add info about new application that should use OAuth feature. Method will generate new
+	 * consumer key and secret that will be used by this application to do authorized access
+	 * to portal resources.
+	 *  
 	 */
 	public OAuthApplication addOAuthApplication(
 			int accessLevel, String callbackURL, String description,
@@ -61,14 +70,26 @@ public class OAuthApplicationLocalServiceImpl
 				.concat(Long.toString(System.nanoTime()));
 		
 		oaa.setConsumerSecret(DigesterUtil.digestHex(secretSeed));
-
+		
 		return updateOAuthApplication(oaa, true);
+	}
+	
+	public int countByName(String name)
+			throws SystemException {
+			
+			return oAuthApplicationPersistence.countByName(name);
 	}
 
 	public OAuthApplication getOAuthApplicationByConsumerKey(String consumerKey)
-		throws SystemException{
+		throws SystemException {
 
 		return oAuthApplicationPersistence.fetchByConsumerKey(consumerKey);
+	}
+	
+	public List<OAuthApplication> findByName(String name)
+		throws SystemException {
+		
+		return oAuthApplicationPersistence.findByName(name);
 	}
 
 }
