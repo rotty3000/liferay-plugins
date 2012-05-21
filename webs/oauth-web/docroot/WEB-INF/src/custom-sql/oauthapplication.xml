@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<custom-sql>
+<sql id="com.liferay.portlet.oauth.service.persistence.OAuthApplicationFinder.countAll">
+		<![CDATA[
+			SELECT
+				COUNT(*) AS COUNT_VALUE
+			FROM
+				OAuthApplication
+		]]>
+	</sql>
+	<sql id="com.liferay.portlet.oauth.service.persistence.OAuthApplicationFinder.countByName">
+		<![CDATA[
+			SELECT
+				COUNT(*) AS COUNT_VALUE
+			FROM
+				OAuthApplication
+			WHERE
+				(name LIKE ?)
+		]]>
+	</sql>
+	<sql id="com.liferay.portlet.oauth.service.persistence.OAuthApplicationFinder.countByWebsite">
+		<![CDATA[
+			SELECT
+				COUNT(*) AS COUNT_VALUE
+			FROM
+				OAuthApplication
+			WHERE
+				(name LIKE ?)
+		]]>
+	</sql>
+	<sql id="com.liferay.portlet.oauth.service.persistence.OAuthApplicationFinder.findAll">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				OAuthApplication
+		]]>
+	</sql>
+	<sql id="com.liferay.portlet.oauth.service.persistence.OAuthApplicationFinder.findByName">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				OAuthApplication
+			WHERE
+				(name LIKE ?)
+		]]>
+	</sql>
+	<sql id="com.liferay.portlet.oauth.service.persistence.OAuthApplicationFinder.findByWebsite">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				OAuthApplication
+			WHERE
+				(name LIKE ?)
+		]]>
+	</sql>
+</custom-sql>
