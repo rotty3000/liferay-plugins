@@ -249,9 +249,9 @@ public interface OAuthApplicationLocalService extends BaseLocalService,
 		throws java.lang.Throwable;
 
 	/**
-	* NOTE FOR DEVELOPERS:
-	*
-	* Never reference this interface directly. Always use {@link com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil} to access the o auth application local service.
+	* Add info about new application that should use OAuth feature. Method will generate new
+	* consumer key and secret that will be used by this application to do authorized access
+	* to portal resources.
 	*/
 	public com.liferay.portal.oauth.model.OAuthApplication addOAuthApplication(
 		int accessLevel, java.lang.String callbackURL,
@@ -259,8 +259,15 @@ public interface OAuthApplicationLocalService extends BaseLocalService,
 		java.lang.String website)
 		throws com.liferay.portal.kernel.exception.SystemException;
 
+	public int countByName(java.lang.String name)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.oauth.model.OAuthApplication getOAuthApplicationByConsumerKey(
 		java.lang.String consumerKey)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	public java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByName(
+		java.lang.String name)
 		throws com.liferay.portal.kernel.exception.SystemException;
 }
