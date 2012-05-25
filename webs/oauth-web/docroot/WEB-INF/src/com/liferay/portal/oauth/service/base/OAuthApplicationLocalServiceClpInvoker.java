@@ -129,7 +129,10 @@ public class OAuthApplicationLocalServiceClpInvoker {
 
 		_methodName47 = "findByName";
 
-		_methodParameterTypes47 = new String[] { "java.lang.String" };
+		_methodParameterTypes47 = new String[] {
+				"java.lang.String", "int", "int",
+				"com.liferay.portal.kernel.util.OrderByComparator"
+			};
 	}
 
 	public Object invokeMethod(String name, String[] parameterTypes,
@@ -251,7 +254,10 @@ public class OAuthApplicationLocalServiceClpInvoker {
 
 		if (_methodName47.equals(name) &&
 				Arrays.deepEquals(_methodParameterTypes47, parameterTypes)) {
-			return OAuthApplicationLocalServiceUtil.findByName((java.lang.String)arguments[0]);
+			return OAuthApplicationLocalServiceUtil.findByName((java.lang.String)arguments[0],
+				((Integer)arguments[1]).intValue(),
+				((Integer)arguments[2]).intValue(),
+				(com.liferay.portal.kernel.util.OrderByComparator)arguments[3]);
 		}
 
 		throw new UnsupportedOperationException();

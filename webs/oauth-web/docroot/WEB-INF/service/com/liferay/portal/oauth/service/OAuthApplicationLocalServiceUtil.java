@@ -301,9 +301,10 @@ public class OAuthApplicationLocalServiceUtil {
 	}
 
 	public static java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByName(
-		java.lang.String name)
+		java.lang.String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
 		throws com.liferay.portal.kernel.exception.SystemException {
-		return getService().findByName(name);
+		return getService().findByName(name, start, end, orderByComparator);
 	}
 
 	public static void clearService() {

@@ -131,7 +131,10 @@ public class OAuthApplicationLocalServiceClp
 
 		_methodName22 = "findByName";
 
-		_methodParameterTypes22 = new String[] { "java.lang.String" };
+		_methodParameterTypes22 = new String[] {
+				"java.lang.String", "int", "int",
+				"com.liferay.portal.kernel.util.OrderByComparator"
+			};
 	}
 
 	public com.liferay.portal.oauth.model.OAuthApplication addOAuthApplication(
@@ -769,14 +772,23 @@ public class OAuthApplicationLocalServiceClp
 	}
 
 	public java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByName(
-		java.lang.String name)
+		java.lang.String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		Object returnObj = null;
 
 		try {
 			returnObj = _invokableLocalService.invokeMethod(_methodName22,
 					_methodParameterTypes22,
-					new Object[] { ClpSerializer.translateInput(name) });
+					new Object[] {
+						ClpSerializer.translateInput(name),
+						
+					start,
+						
+					end,
+						
+					ClpSerializer.translateInput(orderByComparator)
+					});
 		}
 		catch (Throwable t) {
 			t = ClpSerializer.translateThrowable(t);
