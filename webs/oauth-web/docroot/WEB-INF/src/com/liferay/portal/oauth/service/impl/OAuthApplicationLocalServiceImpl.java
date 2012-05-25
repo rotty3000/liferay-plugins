@@ -19,6 +19,7 @@ import java.util.List;
 import com.liferay.counter.service.CounterLocalServiceUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.DigesterUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.oauth.model.OAuthApplication;
 import com.liferay.portal.oauth.service.base.OAuthApplicationLocalServiceBaseImpl;
@@ -77,7 +78,7 @@ public class OAuthApplicationLocalServiceImpl
 	public int countByName(String name)
 			throws SystemException {
 			
-			return oAuthApplicationPersistence.countByName(name);
+			return oAuthApplicationFinder.countByName(name);
 	}
 
 	public OAuthApplication getOAuthApplicationByConsumerKey(String consumerKey)
@@ -86,10 +87,12 @@ public class OAuthApplicationLocalServiceImpl
 		return oAuthApplicationPersistence.fetchByConsumerKey(consumerKey);
 	}
 	
-	public List<OAuthApplication> findByName(String name)
+	public List<OAuthApplication> findByName(String name, int start, int end,
+			OrderByComparator orderByComparator)
 		throws SystemException {
-		
-		return oAuthApplicationPersistence.findByName(name);
-	}
+			
+			return oAuthApplicationFinder.findByName(
+					name, start, end, orderByComparator);
+		}
 
 }
