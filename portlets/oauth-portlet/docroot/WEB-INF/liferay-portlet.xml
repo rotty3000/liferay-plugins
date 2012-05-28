@@ -5,6 +5,7 @@
 	<portlet>
 		<portlet-name>OAuth Admin</portlet-name>
 		<icon>/icon.png</icon>
+		<control-panel-entry-category>portal</control-panel-entry-category>
 		<instanceable>false</instanceable>
 		<header-portlet-css>/css/main.css</header-portlet-css>
 		<footer-portlet-javascript>/js/main.js</footer-portlet-javascript>
