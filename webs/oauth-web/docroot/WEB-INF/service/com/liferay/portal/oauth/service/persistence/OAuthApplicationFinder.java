@@ -24,6 +24,9 @@ public interface OAuthApplicationFinder {
 	public int countByName(java.lang.String name)
 		throws com.liferay.portal.kernel.exception.SystemException;
 
+	public int countByN_O(java.lang.String name, long ownerId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
 	public int countByWebsite(java.lang.String website)
 		throws com.liferay.portal.kernel.exception.SystemException;
 
@@ -34,6 +37,11 @@ public interface OAuthApplicationFinder {
 
 	public java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByName(
 		java.lang.String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	public java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByN_O(
+		java.lang.String name, long ownerId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
 		throws com.liferay.portal.kernel.exception.SystemException;
 

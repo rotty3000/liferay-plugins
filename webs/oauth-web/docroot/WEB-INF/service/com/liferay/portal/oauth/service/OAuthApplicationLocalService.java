@@ -262,6 +262,9 @@ public interface OAuthApplicationLocalService extends BaseLocalService,
 	public int countByName(java.lang.String name)
 		throws com.liferay.portal.kernel.exception.SystemException;
 
+	public int countByNameAndOwner(java.lang.String name, long ownerId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.oauth.model.OAuthApplication getOAuthApplicationByConsumerKey(
 		java.lang.String consumerKey)
@@ -269,6 +272,11 @@ public interface OAuthApplicationLocalService extends BaseLocalService,
 
 	public java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByName(
 		java.lang.String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	public java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByNameAndOwner(
+		java.lang.String name, long ownerId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
 		throws com.liferay.portal.kernel.exception.SystemException;
 }

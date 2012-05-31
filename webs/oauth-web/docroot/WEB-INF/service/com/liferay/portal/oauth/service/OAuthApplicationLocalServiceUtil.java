@@ -294,6 +294,11 @@ public class OAuthApplicationLocalServiceUtil {
 		return getService().countByName(name);
 	}
 
+	public static int countByNameAndOwner(java.lang.String name, long ownerId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().countByNameAndOwner(name, ownerId);
+	}
+
 	public static com.liferay.portal.oauth.model.OAuthApplication getOAuthApplicationByConsumerKey(
 		java.lang.String consumerKey)
 		throws com.liferay.portal.kernel.exception.SystemException {
@@ -305,6 +310,15 @@ public class OAuthApplicationLocalServiceUtil {
 		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return getService().findByName(name, start, end, orderByComparator);
+	}
+
+	public static java.util.List<com.liferay.portal.oauth.model.OAuthApplication> findByNameAndOwner(
+		java.lang.String name, long ownerId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService()
+				   .findByNameAndOwner(name, ownerId, start, end,
+			orderByComparator);
 	}
 
 	public static void clearService() {
