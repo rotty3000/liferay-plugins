@@ -80,6 +80,12 @@ public class OAuthApplicationLocalServiceImpl
 			
 			return oAuthApplicationFinder.countByName(name);
 	}
+	
+	public int countByNameAndOwner(String name, long ownerId)
+			throws SystemException {
+			
+			return oAuthApplicationFinder.countByName(name);
+	}
 
 	public OAuthApplication getOAuthApplicationByConsumerKey(String consumerKey)
 		throws SystemException {
@@ -89,6 +95,14 @@ public class OAuthApplicationLocalServiceImpl
 	
 	public List<OAuthApplication> findByName(String name, int start, int end,
 			OrderByComparator orderByComparator)
+		throws SystemException {
+			
+			return oAuthApplicationFinder.findByName(
+					name, start, end, orderByComparator);
+		}
+	
+	public List<OAuthApplication> findByNameAndOwner(String name, long ownerId,
+			int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
 			
 			return oAuthApplicationFinder.findByName(

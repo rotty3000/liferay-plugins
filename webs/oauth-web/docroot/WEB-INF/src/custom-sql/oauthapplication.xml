@@ -19,6 +19,17 @@
 				(name LIKE ?)
 		]]>
 	</sql>
+	<sql id="com.liferay.portal.oauth.service.persistence.OAuthApplicationFinder.countByN_O">
+		<![CDATA[
+			SELECT
+				COUNT(*) AS COUNT_VALUE
+			FROM
+				OAuthApplication
+			WHERE
+				(name LIKE ?) AND
+				(ownerId = ?)
+		]]>
+	</sql>
 	<sql id="com.liferay.portal.oauth.service.persistence.OAuthApplicationFinder.countByWebsite">
 		<![CDATA[
 			SELECT
@@ -47,6 +58,17 @@
 				(name LIKE ?)
 		]]>
 	</sql>
+	<sql id="com.liferay.portal.oauth.service.persistence.OAuthApplicationFinder.findByN_O">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				OAuthApplication
+			WHERE
+				(name LIKE ?) AND
+				(ownerId = ?)
+		]]>
+	</sql>
 	<sql id="com.liferay.portal.oauth.service.persistence.OAuthApplicationFinder.findByWebsite">
 		<![CDATA[
 			SELECT
@@ -54,7 +76,7 @@
 			FROM
 				OAuthApplication
 			WHERE
-				(name LIKE ?)
+				(website LIKE ?)
 		]]>
 	</sql>
 </custom-sql>

@@ -25,6 +25,9 @@ public class OAuthApplicationFinderImpl
 	public static final String COUNT_BY_NAME =
 			OAuthApplicationFinder.class.getName() + ".countByName";
 	
+	public static final String COUNT_BY_N_O =
+			OAuthApplicationFinder.class.getName() + ".countByN_O";
+	
 	public static final String COUNT_BY_WEBSITE =
 			OAuthApplicationFinder.class.getName() + ".countByWebsite";
 	
@@ -33,6 +36,9 @@ public class OAuthApplicationFinderImpl
 	
 	public static final String FIND_BY_NAME =
 			OAuthApplicationFinder.class.getName() + ".findByName";
+	
+	public static final String FIND_BY_N_O =
+			OAuthApplicationFinder.class.getName() + ".findByN_O";
 	
 	public static final String FIND_BY_WEBSITE =
 			OAuthApplicationFinder.class.getName() + ".findByWebsite";
@@ -73,39 +79,53 @@ public class OAuthApplicationFinderImpl
 	public int countByName(String name)
 		throws SystemException {
 		
-		Session session = null;
-		try {
-			session = openSession();
-			
-			String query = CustomSQLUtil.get(COUNT_BY_NAME);
-		
-			SQLQuery q = session.createSQLQuery(query);
-			
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
-			
-			QueryPos qPos = QueryPos.getInstance(q);
-			
-			qPos.add(name);
-			
-			Iterator<Long> itr = q.iterate();
-			
-			if (itr.hasNext()) {
-				Long count = itr.next();
-				
-				if(null != count){
-					return count.intValue();
-				}
-			}
-			
-			return 0;
-		}
-		catch(Exception e) {
-			throw new SystemException();
-		}
-		finally {
-			closeSession(session);
-		}
+		return countByN_O(name, 0L);
 	}
+	
+	public int countByN_O(String name, long ownerId)
+			throws SystemException {
+			
+			Session session = null;
+			try {
+				session = openSession();
+				
+				String query = CustomSQLUtil.get(COUNT_BY_NAME);
+				
+				if (ownerId > 0L) {
+					query = CustomSQLUtil.get(COUNT_BY_N_O);
+				}
+			
+				SQLQuery q = session.createSQLQuery(query);
+				
+				q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+				
+				QueryPos qPos = QueryPos.getInstance(q);
+				
+				qPos.add((null == name) ? "%" : name);
+				
+				if (ownerId > 0L) {
+					qPos.add(ownerId);
+				}
+				
+				Iterator<Long> itr = q.iterate();
+				
+				if (itr.hasNext()) {
+					Long count = itr.next();
+					
+					if(null != count){
+						return count.intValue();
+					}
+				}
+				
+				return 0;
+			}
+			catch(Exception e) {
+				throw new SystemException();
+			}
+			finally {
+				closeSession(session);
+			}
+		}
 	
 	public int countByWebsite(String website)
 		throws SystemException {
@@ -174,33 +194,47 @@ public class OAuthApplicationFinderImpl
 	public List<OAuthApplication> findByName(String name, int start, int end,
 				OrderByComparator orderByComparator)
 			throws SystemException {
-			Session session = null;
-			try {
-				session = openSession();
-				
-				String query = CustomSQLUtil.get(FIND_BY_NAME);
-				
-				query = CustomSQLUtil.replaceOrderBy(
-						query, orderByComparator);
-				
-				SQLQuery q = session.createSQLQuery(query);
-				
-				q.addEntity("OAuthApplication", OAuthApplicationImpl.class);
-				
-				QueryPos qPos = QueryPos.getInstance(q);
-				
-				qPos.add((null == name) ? "%" : name);
-				
-				return (List<OAuthApplication>)QueryUtil.list(
-						q, getDialect(), start, end);
-			}
-			catch(Exception e) {
-				throw new SystemException();
-			}
-			finally {
-				closeSession(session);
-			}
+			return findByN_O(name, 0L, start, end, orderByComparator);
 		}
+	
+	public List<OAuthApplication> findByN_O(String name, long ownerId,
+			int start, int end,	OrderByComparator orderByComparator)
+		throws SystemException {
+		Session session = null;
+		try {
+			session = openSession();
+			
+			String query = CustomSQLUtil.get(FIND_BY_NAME);
+			
+			if (ownerId > 0L) {
+				query = CustomSQLUtil.get(FIND_BY_N_O);
+			}
+			
+			query = CustomSQLUtil.replaceOrderBy(
+					query, orderByComparator);
+			
+			SQLQuery q = session.createSQLQuery(query);
+			
+			q.addEntity("OAuthApplication", OAuthApplicationImpl.class);
+			
+			QueryPos qPos = QueryPos.getInstance(q);
+			
+			qPos.add((null == name) ? "%" : name);
+			
+			if (ownerId > 0L) {
+				qPos.add(ownerId);
+			}
+			
+			return (List<OAuthApplication>)QueryUtil.list(
+					q, getDialect(), start, end);
+		}
+		catch(Exception e) {
+			throw new SystemException();
+		}
+		finally {
+			closeSession(session);
+		}
+	}
 	
 	public List<OAuthApplication> findByWebsite(String website, int start, int end,
 				OrderByComparator orderByComparator)
