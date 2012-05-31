@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.oauth.model.OAuthApplication;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.PortalPreferences;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portlet.oauth.OAuthConstants;
@@ -66,16 +65,19 @@ public class OAuthApplicationSearch extends SearchContainer<OAuthApplication> {
 					Validator.isNotNull(orderByType)) {
 
 					preferences.setValue(
-						PortletKeys.USERS_ADMIN, "apps-order-by-col", orderByCol);
+						OAuthConstants.PORTLET_KEY_OAUTH_ADMIN,
+							"apps-order-by-col", orderByCol);
 					preferences.setValue(
-						PortletKeys.USERS_ADMIN, "apps-order-by-type",
-						orderByType);
+							OAuthConstants.PORTLET_KEY_OAUTH_ADMIN,
+								"apps-order-by-type", orderByType);
 				}
 				else {
 					orderByCol = preferences.getValue(
-						PortletKeys.USERS_ADMIN, "apps-order-by-col", "name");
+							OAuthConstants.PORTLET_KEY_OAUTH_ADMIN,
+								"apps-order-by-col", "name");
 					orderByType = preferences.getValue(
-						PortletKeys.USERS_ADMIN, "apps-order-by-type", "asc");
+							OAuthConstants.PORTLET_KEY_OAUTH_ADMIN,
+								"apps-order-by-type", "asc");
 					
 					setOrderableHeaders(orderableHeaders);
 					setOrderByCol(orderByCol);

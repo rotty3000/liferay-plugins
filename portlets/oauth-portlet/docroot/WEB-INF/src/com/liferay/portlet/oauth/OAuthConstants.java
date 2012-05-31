@@ -22,4 +22,7 @@ public class OAuthConstants {
  public static final String EMPTY_RESULTS_MESSAGE = "no-apps-were-found";
  public static final int ACCESS_TYPE_READ = 0;
  public static final int ACCESS_TYPE_WRITE = 1;
+ 
+ public static final String PORTLET_KEY_OAUTH_ADMIN = "OA01";
+ public static final String PORTLET_KEY_OAUTH_USERS = "OA02";
 }

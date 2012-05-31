@@ -8,7 +8,7 @@
 <%
 String toolbarItem = ParamUtil.getString(request, "toolbarItem", "view-all");
 
-PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+System.out.println("Implem: "+permissionChecker);
 %>
 
 <div class="lfr-portlet-toolbar">
@@ -19,7 +19,7 @@ PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
 	<span class="lfr-toolbar-button view-button <%= toolbarItem.equals("view-all") ? "current" : "" %>">
 		<a href="<%= viewSitesURL %>"><liferay-ui:message key="view-all" /></a>
 	</span>
-<c:if test="<%= true %>">
+<c:if test='<%= permissionChecker.hasPermission(layout.getGroupId(), "com.liferay.portlet.oauth", layout.getGroupId(), "ADD_OAUTH_APP") %>'>
 	<portlet:renderURL var="addApplicationURL">
 		<portlet:param name="jspPage" value="/html/admin/edit.jsp"/>
 		<portlet:param name="referer" value="<%= currentURL %>"/>
