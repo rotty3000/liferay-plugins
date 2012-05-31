@@ -16,6 +16,10 @@
 		<role-link>Administrator</role-link>
 	</role-mapper>
 	<role-mapper>
+		<role-name>oauth-user</role-name>
+		<role-link>OAuth User</role-link>
+	</role-mapper>
+	<role-mapper>
 		<role-name>guest</role-name>
 		<role-link>Guest</role-link>
 	</role-mapper>
