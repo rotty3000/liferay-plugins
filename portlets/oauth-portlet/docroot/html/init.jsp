@@ -38,4 +38,6 @@ else if (resourceRequest != null) {
 }
 
 String currentURL = currentURLObj.toString();
+
+boolean adminUser = permissionChecker.isOmniadmin() || permissionChecker.isCompanyAdmin();
 %>

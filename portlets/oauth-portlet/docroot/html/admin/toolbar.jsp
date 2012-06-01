@@ -1,3 +1,4 @@
+<%@page import="com.liferay.portal.security.permission.ActionKeys"%>
 <%@page import="com.liferay.portal.security.permission.PermissionChecker"%>
 <%@page import="com.liferay.portal.theme.ThemeDisplay"%>
 <%@page import="com.liferay.portal.kernel.util.ParamUtil"%>
@@ -7,19 +8,17 @@
 
 <%
 String toolbarItem = ParamUtil.getString(request, "toolbarItem", "view-all");
-
-System.out.println("Implem: "+permissionChecker);
 %>
 
 <div class="lfr-portlet-toolbar">
-	<portlet:renderURL var="viewSitesURL">
+	<portlet:renderURL var="viewAppsURL">
 		<portlet:param name="jspPage" value="/html/admin/view.jsp" />
 	</portlet:renderURL>
 
 	<span class="lfr-toolbar-button view-button <%= toolbarItem.equals("view-all") ? "current" : "" %>">
-		<a href="<%= viewSitesURL %>"><liferay-ui:message key="view-all" /></a>
+		<a href="<%= viewAppsURL %>"><liferay-ui:message key='<%= adminUser ? "view-all":"my-applications" %>' /></a>
 	</span>
-<c:if test='<%= permissionChecker.hasPermission(layout.getGroupId(), "com.liferay.portlet.oauth", layout.getGroupId(), "ADD_OAUTH_APP") %>'>
+<c:if test='<%= permissionChecker.hasPermission(layout.getGroupId(), "com.liferay.portlet.oauth", layout.getGroupId(), ActionKeys.ADD_ENTRY) %>'>
 	<portlet:renderURL var="addApplicationURL">
 		<portlet:param name="jspPage" value="/html/admin/edit.jsp"/>
 		<portlet:param name="referer" value="<%= currentURL %>"/>

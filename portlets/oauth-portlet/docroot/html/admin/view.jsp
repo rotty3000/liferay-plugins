@@ -1,11 +1,14 @@
 <%@page import="com.liferay.portal.kernel.language.LanguageUtil"%>
+<%@page import="com.liferay.portal.kernel.servlet.SessionMessages"%>
+<%@page import="com.liferay.portal.kernel.util.ParamUtil"%>
+<%@page import="com.liferay.portal.oauth.model.OAuthApplication"%>
+<%@page import="com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil"%>
+<%@page import="com.liferay.portlet.oauth.OAuthConstants"%>
 <%@page import="com.liferay.portlet.oauth.search.OAuthApplicationSearchTerms"%>
 <%@page import="com.liferay.portlet.oauth.search.OAuthApplicationDisplayTerms"%>
-<%@page import="com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil"%>
 <%@page import="com.liferay.portlet.oauth.search.OAuthApplicationSearch"%>
-<%@page import="com.liferay.portal.kernel.util.ParamUtil"%>
-<%@page import="com.liferay.portal.kernel.servlet.SessionMessages"%>
-<%@page import="com.liferay.portlet.oauth.OAuthConstants"%>
+
+<%@page import="java.util.List"%>
 
 <%@ include file="/html/init.jsp" %>
 
@@ -38,11 +41,22 @@ String replaceParm0 = "{0}";
 	
 	<%
 		String name = ((OAuthApplicationSearchTerms)searchContainer.getSearchTerms()).getName();
+		
+		List<OAuthApplication> oAuthApps = null;
+		int oAuthAppsCnt = 0;
+		
+		if (adminUser) {
+			oAuthApps = OAuthApplicationLocalServiceUtil.findByName(name, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator());
+			oAuthAppsCnt = OAuthApplicationLocalServiceUtil.countByName(name);
+		} else {
+			oAuthApps = OAuthApplicationLocalServiceUtil.findByNameAndOwner(name, themeDisplay.getUserId(), searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator());
+			oAuthAppsCnt = OAuthApplicationLocalServiceUtil.countByNameAndOwner(name, themeDisplay.getUserId());
+		}
 	%>
 	
 	<liferay-ui:search-container-results
-	results="<%= OAuthApplicationLocalServiceUtil.findByName(name, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()) %>"
-	total="<%= OAuthApplicationLocalServiceUtil.countByName(name) %>"
+	results="<%= oAuthApps %>"
+	total="<%= oAuthAppsCnt %>"
 	 />
 
 	<liferay-ui:search-container-row

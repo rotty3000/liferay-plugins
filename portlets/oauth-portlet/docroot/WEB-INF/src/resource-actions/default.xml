@@ -21,6 +21,25 @@
 			</guest-unsupported>
 		</permissions>
 	</portlet-resource>
+	<portlet-resource>
+		<portlet-name>OAuth Authorizations</portlet-name>
+		<permissions>
+			<supports>
+				<action-key>ACCESS_IN_CONTROL_PANEL</action-key>
+				<action-key>ADD_TO_PAGE</action-key>
+				<action-key>CONFIGURATION</action-key>
+				<action-key>VIEW</action-key>
+			</supports>
+			<site-member-defaults />
+			<guest-defaults />
+			<guest-unsupported>
+				<action-key>ACCESS_IN_CONTROL_PANEL</action-key>
+				<action-key>ADD_TO_PAGE</action-key>
+				<action-key>CONFIGURATION</action-key>
+				<action-key>VIEW</action-key>
+			</guest-unsupported>
+		</permissions>
+	</portlet-resource>
 	<model-resource>
 		<model-name>com.liferay.portlet.oauth</model-name>
 		<portlet-ref>
@@ -28,20 +47,20 @@
 		</portlet-ref>
 		<permissions>
 			<supports>
-				<action-key>ADD_OAUTH_APP</action-key>
-				<action-key>DELETE_OAUTH_APP</action-key>
+				<action-key>ADD_ENTRY</action-key>
+				<action-key>DELETE</action-key>
 				<action-key>PERMISSIONS</action-key>
-				<action-key>UPDATE_OAUTH_APP</action-key>
-				<action-key>VIEW_OAUTH_APP</action-key>
+				<action-key>UPDATE</action-key>
+				<action-key>VIEW</action-key>
 			</supports>
 			<site-member-defaults />
 			<guest-defaults />
 			<guest-unsupported>
-				<action-key>ADD_OAUTH_APP</action-key>
-				<action-key>DELETE_OAUTH_APP</action-key>
+				<action-key>ADD_ENTRY</action-key>
+				<action-key>DELETE</action-key>
 				<action-key>PERMISSIONS</action-key>
-				<action-key>UPDATE_OAUTH_APP</action-key>
-				<action-key>VIEW_OAUTH_APP</action-key>
+				<action-key>UPDATE</action-key>
+				<action-key>VIEW</action-key>
 			</guest-unsupported>
 		</permissions>
 	</model-resource>
