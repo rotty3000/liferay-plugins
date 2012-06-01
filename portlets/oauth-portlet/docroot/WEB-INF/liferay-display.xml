@@ -4,5 +4,6 @@
 <display>
 	<category name="category.opensocial">
 		<portlet id="OAuth Admin"></portlet>
+		<portlet id="OAuth Authorizations"></portlet>
 	</category>
 </display>

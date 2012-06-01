@@ -9,7 +9,16 @@
 		<instanceable>false</instanceable>
 		<header-portlet-css>/css/main.css</header-portlet-css>
 		<footer-portlet-javascript>/js/main.js</footer-portlet-javascript>
-		<css-class-wrapper>oauth registration-portlet</css-class-wrapper>
+		<css-class-wrapper>oauth admin-portlet</css-class-wrapper>
+	</portlet>
+	<portlet>
+		<portlet-name>OAuth Authorizations</portlet-name>
+		<icon>/icon.png</icon>
+		<control-panel-entry-category>profile</control-panel-entry-category>
+		<instanceable>false</instanceable>
+		<header-portlet-css>/css/main.css</header-portlet-css>
+		<footer-portlet-javascript>/js/main.js</footer-portlet-javascript>
+		<css-class-wrapper>oauth authorizations-portlet</css-class-wrapper>
 	</portlet>
 	<role-mapper>
 		<role-name>administrator</role-name>
