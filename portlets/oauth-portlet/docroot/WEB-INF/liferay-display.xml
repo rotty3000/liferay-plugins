@@ -3,7 +3,7 @@
 
 <display>
 	<category name="category.opensocial">
-		<portlet id="OAuth Admin"></portlet>
-		<portlet id="OAuth Authorizations"></portlet>
+		<portlet id="1"></portlet>
+		<portlet id="2"></portlet>
 	</category>
 </display>
