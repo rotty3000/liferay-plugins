@@ -7,17 +7,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
 	>
-	<bean id="com.liferay.portal.oauth.manager.PortalOAuthManager" class="com.liferay.portal.oauth.manager.DefaultPortalOAuthManager">
-		<property name="defaultRoles">
-			<map>
-				<entry key="OAuth User" value="Automaticaly added role by OAuth Web plugin to support OAuth features." />
-			</map>
-		</property>
-	</bean>
-	<bean id="com.liferay.portal.oauth.manager.PortalOAuthManagerUtil" class="com.liferay.portal.oauth.manager.PortalOAuthManagerUtil">
-		<property name="portalOAuthManager" ref="com.liferay.portal.oauth.manager.PortalOAuthManager" />
-	</bean>
-
 	<bean id="com.liferay.portal.kernel.oauth.OAuthProviderManagerUtil" class="com.liferay.portal.oauth.OAuthProviderManagerUtil">
 		<property name="OAuthProviderManager">
 			<bean class="com.liferay.portal.oauth.OAuthProviderManagerImpl" >
