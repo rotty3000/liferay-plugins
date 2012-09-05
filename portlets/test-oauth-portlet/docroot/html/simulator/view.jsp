@@ -14,13 +14,11 @@
  */
 --%>
 
-<%@page import="java.util.ArrayList"%>
-<%@page import="com.liferay.portal.oauth.service.OAuthApplications_UsersLocalServiceUtil"%>
-<%@page import="com.liferay.portal.oauth.service.persistence.OAuthApplications_UsersFinderUtil"%>
-<%@page import="com.liferay.portal.oauth.service.persistence.OAuthApplications_UsersFinder"%>
-<%@page import="com.liferay.portal.oauth.model.OAuthApplications_Users"%>
+<%@ page import="com.liferay.portal.oauth.model.OAuthApplications_Users" %>
 <%@ page import="com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil" %>
+<%@ page import="com.liferay.portal.oauth.service.OAuthApplications_UsersLocalServiceUtil" %>
 
+<%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.List" %>
 
 <%@ include file="/html/init.jsp" %>
@@ -61,20 +59,20 @@ boolean verifyStep = null != oauthURL && !"".equals(oauthURL);
 		</aui:form>
 	</c:when>
 	<c:otherwise>
-		<liferay-ui:search-container delta="5" >
+		<liferay-ui:search-container delta="5">
 
 	<%
-		List<OAuthApplication> allOAuthApps = null;	
+		List<OAuthApplication> allOAuthApps = null;
 		List<OAuthApplication> unapprovedOAuthApps = new ArrayList<OAuthApplication>();
-		
+
 		int oAuthAppsCnt = 0;
-		
+
 		allOAuthApps = OAuthApplicationLocalServiceUtil.getApplications(themeDisplay.getCompanyId());
-		
+
 		unapprovedOAuthApps.addAll(allOAuthApps);
-		
+
 		List<OAuthApplications_Users> approved = OAuthApplications_UsersLocalServiceUtil.findByUser(themeDisplay.getUserId());
-		
+
 		for (OAuthApplication a : allOAuthApps) {
 			for (OAuthApplications_Users oaau : approved) {
 				if (a.getApplicationId() == oaau.getApplicationId()) {

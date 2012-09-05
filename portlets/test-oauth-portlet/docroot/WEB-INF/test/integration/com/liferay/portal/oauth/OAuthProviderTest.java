@@ -125,8 +125,7 @@ public class OAuthProviderTest {
 				redirectedToLoginPage();
 			}
 
-			WebElement element = _driver.findElement(
-					By.id(OAUTH_PORTLET_ID));
+			WebElement element = _driver.findElement(By.id(OAUTH_PORTLET_ID));
 			element.submit();
 
 			_driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
@@ -159,8 +158,7 @@ public class OAuthProviderTest {
 				redirectedToLoginPage();
 			}
 
-			WebElement element = _driver.findElement(
-					By.id(OAUTH_PORTLET_ID));
+			WebElement element = _driver.findElement(By.id(OAUTH_PORTLET_ID));
 			element.submit();
 
 			element = _driver.findElement(By.className("portlet-msg-info"));

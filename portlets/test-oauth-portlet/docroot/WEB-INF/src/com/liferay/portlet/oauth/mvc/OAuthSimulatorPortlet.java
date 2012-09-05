@@ -15,14 +15,30 @@
 package com.liferay.portlet.oauth.mvc;
 
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.model.Role;
+import com.liferay.portal.model.RoleConstants;
+import com.liferay.portal.model.User;
 import com.liferay.portal.oauth.model.OAuthApplication;
 import com.liferay.portal.oauth.service.OAuthApplicationLocalServiceUtil;
+import com.liferay.portal.service.RoleServiceUtil;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.ServiceContextFactory;
+import com.liferay.portal.service.UserServiceUtil;
 import com.liferay.portlet.oauth.simulator.LiferayApi;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.IOException;
+
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -39,8 +55,7 @@ public class OAuthSimulatorPortlet extends MVCPortlet {
 	public void addOAuthorization(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws IOException, PortletException {
-		long applicationId = ParamUtil.getLong(
-				actionRequest, "applicationId");
+		long applicationId = ParamUtil.getLong(actionRequest, "applicationId");
 
 		if (0 != applicationId) {
 			try {
@@ -89,15 +104,123 @@ public class OAuthSimulatorPortlet extends MVCPortlet {
 
 	@Override
 	public void render(RenderRequest request, RenderResponse response)
-			throws PortletException, IOException {
+			throws IOException, PortletException {
 		super.render(request, response);
+	}
+
+	public void setupOAuthSimulator(
+		ActionRequest actionRequest, ActionResponse actionResponse)
+	throws IOException, PortletException {
+
+		int userCount = ParamUtil.getInteger(
+				actionRequest, "oauth-simulator-user-cnt", 0);
+		int vendorPercentage = ParamUtil.getInteger(
+			actionRequest, "oauth-simulator-vendor-percentage", 0);
+		int maxApplicationsPerUser = ParamUtil.getInteger(
+			actionRequest, "oauth-simulator-max-applications", 0);
+
+		if ((0 != userCount) && (0 != maxApplicationsPerUser)) {
+
+			vendorPercentage = 100/vendorPercentage;
+
+			try {
+				ServiceContext sc = ServiceContextFactory.getInstance(
+					actionRequest);
+
+				if (_log.isInfoEnabled()) {
+					_log.info("Generating test defaults...");
+				}
+
+				Role role = RoleServiceUtil.getRole(
+					sc.getCompanyId(), OAUTH_ROLE_NAME);
+
+				if (null == role) {
+					Map<Locale, String> titleMap =
+									new HashMap<Locale, String>();
+					titleMap.put(LocaleUtil.getDefault(), OAUTH_ROLE_TITLE);
+
+					Map<Locale, String> descMap = new HashMap<Locale, String>();
+					descMap.put(
+						LocaleUtil.getDefault(), OAUTH_ROLE_DESCRIPTION);
+
+					if (_log.isInfoEnabled()) {
+						_log.info("Creating role ".concat(OAUTH_ROLE_NAME));
+					}
+
+					role =
+						RoleServiceUtil.addRole(
+							OAUTH_ROLE_NAME, titleMap, descMap,
+							RoleConstants.TYPE_REGULAR);
+				}
+
+				long addedAppsCnt = 0L;
+				String base = "oauths";
+
+				for (int i=0; i<userCount; i++) {
+					User u = UserServiceUtil.addUser(
+						sc.getCompanyId(), false, "test", "test", true, null,
+						base.concat(
+							String.valueOf(i))
+							.concat(".name@liferayt.com"),
+						0L, StringPool.BLANK, LocaleUtil.getDefault(),
+						"OAuth".concat(String.valueOf(i)), null,
+						"Userman".concat(String.valueOf(i)), 0, 0, (i%2==0),
+						(i%10 + 1), (i%27 + 1), (1950+(i%62)), null, null, null,
+						null, null, false, sc);
+
+					if (i%vendorPercentage == 0) {
+						RoleServiceUtil.addUserRoles(
+							u.getUserId(), new long[]{role.getRoleId()});
+
+						StringBundler titleSb = new StringBundler(5);
+
+						for (int added = 0, randomIdx;
+								added < maxApplicationsPerUser; added++) {
+							randomIdx = (int)(addedAppsCnt%APP_NAMES.length);
+
+							titleSb.append((addedAppsCnt%2==0?"":"IT"));
+							titleSb.append(" ");
+							titleSb.append(APP_NAMES[randomIdx]);
+							titleSb.append(" ");
+							titleSb.append(String.valueOf(added%3));
+
+							OAuthApplicationLocalServiceUtil
+							.addApplication(
+								u.getUserId(), titleSb.toString(),
+								APP_DESCRIPTION, APP_WEB_URL, APP_CALLBACK_URL,
+								added%2, sc);
+
+							addedAppsCnt++;
+						}
+					}
+
+					if (_log.isInfoEnabled()) {
+						_log.info("Generation done, new user: "
+							.concat(u.getFirstName()));
+					}
+				}
+			}
+			catch (Exception e) {
+				_log.error(e);
+
+				if (e instanceof SystemException) {
+					SessionErrors.add(actionRequest, e.getClass().getName(), e);
+				}
+				else {
+					throw new PortletException(e.fillInStackTrace());
+				}
+			}
+		}
+		else {
+			SessionErrors.add(
+				actionRequest, "cant-complete-operation-without-id");
+		}
 	}
 
 	public void verifyOAuthorization(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws IOException, PortletException {
-		long applicationId = ParamUtil.getLong(
-				actionRequest, "applicationId");
+		long applicationId = ParamUtil.getLong(actionRequest, "applicationId");
 
 		if (0 != applicationId) {
 			try {
@@ -137,5 +260,22 @@ public class OAuthSimulatorPortlet extends MVCPortlet {
 				actionRequest, "cant-complete-operation-without-id");
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OAuthSimulatorPortlet.class);
+
+	private static final String APP_CALLBACK_URL =
+			"http://www.liferay.com/test-oauth/callback";
+	private static final String APP_DESCRIPTION =
+			"Automatically added for testing OAuth Administration Portlets.";
+	private static final String[] APP_NAMES = new String[] {
+		"Mega", "AC", "Guru", "Sync", "Kato", "Ipon", "Luna", "Lungo", "Pluto",
+		"Reco", "Perpetuo", "Lambda"};
+	private static final String APP_WEB_URL = "http://oauth-test.liferay.com";
+	private static final String OAUTH_ROLE_DESCRIPTION =
+			"Oauth developer vendor etc";
+	private static final String OAUTH_ROLE_NAME = "OAUTH Developer";
+	private static final String OAUTH_ROLE_TITLE =
+			"OAuth Application Developer";
 
 }
