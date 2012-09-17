@@ -158,7 +158,10 @@ public class CalendarPortlet extends MVCPortlet {
 		try {
 			String resourceID = resourceRequest.getResourceID();
 
-			if (resourceID.equals("calendarRenderingRules")) {
+			if (resourceID.equals("calendarBookingInvitees")) {
+				serveCalendarBookingInvitees(resourceRequest, resourceResponse);
+			}
+			else if (resourceID.equals("calendarRenderingRules")) {
 				serveCalendarRenderingRules(resourceRequest, resourceResponse);
 			}
 			else if (resourceID.equals("calendarResources")) {
@@ -233,12 +236,12 @@ public class CalendarPortlet extends MVCPortlet {
 			actionRequest, "startDate");
 		java.util.Calendar endDateJCalendar = getJCalendar(
 			actionRequest, "endDate");
+		long oldStartDate = ParamUtil.getLong(actionRequest, "oldStartDate");
 		boolean allDay = ParamUtil.getBoolean(actionRequest, "allDay");
 		String recurrence = getRecurrence(actionRequest);
-		int status = ParamUtil.getInteger(actionRequest, "status");
-
 		long[] reminders = getReminders(actionRequest);
 		String[] remindersType = getRemindersType(actionRequest);
+		int status = ParamUtil.getInteger(actionRequest, "status");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CalendarBooking.class.getName(), actionRequest);
@@ -254,12 +257,40 @@ public class CalendarPortlet extends MVCPortlet {
 				serviceContext);
 		}
 		else {
-			CalendarBookingServiceUtil.updateCalendarBooking(
-				calendarBookingId, calendarId, childCalendarIds, titleMap,
-				descriptionMap, location, startDateJCalendar.getTimeInMillis(),
-				endDateJCalendar.getTimeInMillis(), allDay, recurrence,
-				reminders[0], remindersType[0], reminders[1], remindersType[1],
-				status, serviceContext);
+			boolean updateCalendarBookingInstance = ParamUtil.getBoolean(
+				actionRequest, "updateCalendarBookingInstance");
+
+			if (updateCalendarBookingInstance) {
+				boolean allFollowing = ParamUtil.getBoolean(
+					actionRequest, "allFollowing");
+
+				CalendarBookingServiceUtil.updateCalendarBookingInstance(
+					calendarBookingId, calendarId, childCalendarIds, titleMap,
+					descriptionMap, location,
+					startDateJCalendar.getTimeInMillis(),
+					endDateJCalendar.getTimeInMillis(), allDay, recurrence,
+					allFollowing, reminders[0], remindersType[0], reminders[1],
+					remindersType[1], status, serviceContext);
+			}
+			else {
+				CalendarBooking calendarBooking =
+					CalendarBookingServiceUtil.getCalendarBooking(
+						calendarBookingId);
+
+				long duration =
+					(endDateJCalendar.getTimeInMillis() -
+						startDateJCalendar.getTimeInMillis());
+				long offset =
+					(startDateJCalendar.getTimeInMillis() - oldStartDate);
+
+				CalendarBookingServiceUtil.updateCalendarBooking(
+					calendarBookingId, calendarId, childCalendarIds, titleMap,
+					descriptionMap, location,
+					(calendarBooking.getStartDate() + offset),
+					(calendarBooking.getStartDate() + offset + duration),
+					allDay, recurrence, reminders[0], remindersType[0],
+					reminders[1], remindersType[1], status, serviceContext);
+			}
 		}
 	}
 
@@ -473,6 +504,14 @@ public class CalendarPortlet extends MVCPortlet {
 
 		recurrence.setWeekdays(weekdays);
 
+		String[] exceptionDates = StringUtil.split(
+			ParamUtil.getString(actionRequest, "exceptionDates"));
+
+		for (String exceptionDate : exceptionDates) {
+			recurrence.addExceptionDate(
+				JCalendarUtil.getJCalendar(Long.valueOf(exceptionDate)));
+		}
+
 		return RecurrenceSerializer.serialize(recurrence);
 	}
 
@@ -533,6 +572,31 @@ public class CalendarPortlet extends MVCPortlet {
 		return false;
 	}
 
+	protected void serveCalendarBookingInvitees(
+		ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+			throws Exception {
+
+		long parentCalendarBookingId = ParamUtil.getLong(
+			resourceRequest, "parentCalendarBookingId");
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		List<CalendarBooking> childCalendarBookings =
+			CalendarBookingServiceUtil.getChildCalendarBookings(
+				parentCalendarBookingId);
+
+		for (CalendarBooking calendarBooking : childCalendarBookings) {
+			CalendarResource calendarResource =
+				calendarBooking.getCalendarResource();
+
+			addCalendarJSONObject(
+				resourceRequest, jsonArray, calendarResource.getClassNameId(),
+				calendarResource.getClassPK());
+		}
+
+		writeJSON(resourceRequest, resourceResponse, jsonArray);
+	}
+
 	protected void serveCalendarRenderingRules(
 		ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 			throws Exception {
@@ -551,10 +615,13 @@ public class CalendarPortlet extends MVCPortlet {
 		long endDate = ParamUtil.getLong(resourceRequest, "endDate");
 		String ruleName = ParamUtil.getString(resourceRequest, "ruleName");
 
-		JSONObject jsonObject = CalendarUtil.getCalendarRenderingRules(
-			themeDisplay, calendarIds, statuses, startDate, endDate, ruleName);
+		if (calendarIds.length > 0) {
+			JSONObject jsonObject = CalendarUtil.getCalendarRenderingRules(
+				themeDisplay, calendarIds, statuses, startDate, endDate,
+				ruleName);
 
-		writeJSON(resourceRequest, resourceResponse, jsonObject);
+			writeJSON(resourceRequest, resourceResponse, jsonObject);
+		}
 	}
 
 	protected void serveCalendarResources(

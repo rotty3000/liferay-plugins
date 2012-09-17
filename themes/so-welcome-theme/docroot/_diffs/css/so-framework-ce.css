@@ -27,20 +27,12 @@
 		display: table;
 		margin: 0 auto;
 	}
-
-	.portlet {
-
-	}
 }
 
 /* ---------- Extras ---------- */
 
 html.ie, .ie body, .ie #loginPage {
 	height: 100%;
-}
-
-.ie #loginPage .login-holder .portlet {
-	border: 1px solid $gray;
 }
 
 .ie6 img {

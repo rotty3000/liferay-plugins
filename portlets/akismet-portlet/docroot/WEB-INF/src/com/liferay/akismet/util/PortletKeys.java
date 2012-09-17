@@ -12,26 +12,13 @@
  * details.
  */
 
-package com.liferay.testpacl.hook.service.impl;
-
-import com.liferay.portlet.blogs.service.BlogsStatsUserLocalService;
-import com.liferay.portlet.blogs.service.BlogsStatsUserLocalServiceWrapper;
+package com.liferay.akismet.util;
 
 /**
  * @author Brian Wing Shun Chan
  */
-public class BlogsStatsUserLocalServiceImpl
-	extends BlogsStatsUserLocalServiceWrapper {
+public class PortletKeys extends com.liferay.portal.util.PortletKeys {
 
-	public BlogsStatsUserLocalServiceImpl(
-		BlogsStatsUserLocalService blogsStatsUserLocalService) {
-
-		super(blogsStatsUserLocalService);
-	}
-
-	@Override
-	public int getBlogsStatsUsersCount() {
-		return -456;
-	}
+	public static final String AKISMET = "1_WAR_akismetportlet";
 
 }

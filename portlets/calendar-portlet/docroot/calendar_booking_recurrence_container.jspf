@@ -16,6 +16,7 @@
 
 <%
 int count = 0;
+String exceptionDatesString = StringPool.BLANK;
 Frequency frequency = null;
 int interval = 0;
 java.util.Calendar untilJCalendar = startDateJCalendar;
@@ -42,10 +43,30 @@ if (recurrence != null) {
 	if (recurrence.getUntilJCalendar() != null) {
 		onChecked = true;
 	}
+
+	StringBundler sb = new StringBundler();
+
+	List<java.util.Calendar> exceptionJCalendars = recurrence.getExceptionJCalendars();
+
+	Iterator<java.util.Calendar> iterator = exceptionJCalendars.iterator();
+
+	while (iterator.hasNext()) {
+		java.util.Calendar exceptionJCalendar = iterator.next();
+
+		sb.append(exceptionJCalendar.getTimeInMillis());
+
+		if (it.hasNext()) {
+			sb.append(StringPool.COMMA);
+		}
+	}
+
+	exceptionDatesString = sb.toString();
 }
 %>
 
 <table class="calendar-portlet-recurrence-container aui-helper-hidden" id="<portlet:namespace />recurrenceContainer">
+	<aui:input name="exceptionDates" type="hidden" value="<%= exceptionDatesString %>" />
+
 	<tbody>
 		<tr>
 			<th class="calendar-portlet-recurrence-title">

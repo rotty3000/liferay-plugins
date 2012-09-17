@@ -287,6 +287,46 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			secondReminderType, status, serviceContext);
 	}
 
+	public CalendarBooking updateCalendarBookingInstance(
+			long calendarBookingId, long calendarId, long[] childCalendarIds,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String location, long startDate, long endDate, boolean allDay,
+			String recurrence, boolean allFollowing, long firstReminder,
+			String firstReminderType, long secondReminder,
+			String secondReminderType, int status,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		CalendarPermission.check(
+			getPermissionChecker(), calendarId, ActionKeys.MANAGE_BOOKINGS);
+
+		return calendarBookingLocalService.updateCalendarBookingInstance(
+			getUserId(), calendarBookingId, calendarId, childCalendarIds,
+			titleMap, descriptionMap, location, startDate, endDate, allDay,
+			recurrence, allFollowing, firstReminder, firstReminderType,
+			secondReminder, secondReminderType, status, serviceContext);
+	}
+
+	public CalendarBooking updateCalendarBookingInstance(
+			long calendarBookingId, long calendarId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String location, long startDate, long endDate, boolean allDay,
+			String recurrence, boolean allFollowing, long firstReminder,
+			String firstReminderType, long secondReminder,
+			String secondReminderType, int status,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		CalendarPermission.check(
+			getPermissionChecker(), calendarId, ActionKeys.MANAGE_BOOKINGS);
+
+		return calendarBookingLocalService.updateCalendarBookingInstance(
+			getUserId(), calendarBookingId, calendarId, titleMap,
+			descriptionMap, location, startDate, endDate, allDay, recurrence,
+			allFollowing, firstReminder, firstReminderType, secondReminder,
+			secondReminderType, status, serviceContext);
+	}
+
 	protected CalendarBooking filterCalendarBooking(
 			CalendarBooking calendarBooking)
 		throws PortalException, SystemException {

@@ -12,22 +12,13 @@
  * details.
  */
 
-package com.liferay.testhook.hook.model.impl;
-
-import com.liferay.portal.model.User;
-import com.liferay.portal.model.UserWrapper;
+package com.liferay.akismet.util;
 
 /**
- * @author Brian Wing Shun Chan
+ * @author Amos Fong
  */
-public class TestUserImpl extends UserWrapper {
+public interface PortletPropsKeys {
 
-	public TestUserImpl(User user) {
-		super(user);
-	}
-
-	public String getFavoriteColor() {
-		return "Blue";
-	}
+	public static final String AKISMET_API_KEY = "akismet.api.key";
 
 }

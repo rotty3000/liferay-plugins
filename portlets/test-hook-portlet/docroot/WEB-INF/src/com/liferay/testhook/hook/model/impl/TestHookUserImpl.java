@@ -12,25 +12,22 @@
  * details.
  */
 
-package com.liferay.testpacl.hook.service.impl;
+package com.liferay.testhook.hook.model.impl;
 
-import com.liferay.portlet.blogs.service.BlogsEntryLocalService;
-import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceWrapper;
+import com.liferay.portal.model.User;
+import com.liferay.portal.model.UserWrapper;
 
 /**
  * @author Brian Wing Shun Chan
  */
-public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceWrapper {
+public class TestHookUserImpl extends UserWrapper {
 
-	public BlogsEntryLocalServiceImpl(
-		BlogsEntryLocalService blogsEntryLocalService) {
-
-		super(blogsEntryLocalService);
+	public TestHookUserImpl(User user) {
+		super(user);
 	}
 
-	@Override
-	public int getBlogsEntriesCount() {
-		return -123;
+	public String getFavoriteColor() {
+		return "Blue";
 	}
 
 }
