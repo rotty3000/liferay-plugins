@@ -1,3 +1,5 @@
+<%@ page contentType="text/javascript; charset=UTF-8" %>
+
 AUI.add(
 	'liferay-scheduler',
 	function(A) {
@@ -95,7 +97,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/add-calendar-booking': {
+						'<%= request.getContextPath() %>/calendarbooking/add-calendar-booking': {
 							allDay: schedulerEvent.get('allDay'),
 							calendarId: schedulerEvent.get('calendarId'),
 							childCalendarIds: STR_BLANK,
@@ -203,7 +205,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/delete-calendar-booking': {
+						'<%= request.getContextPath() %>/calendarbooking/delete-calendar-booking': {
 							calendarBookingId: schedulerEvent.get('calendarBookingId')
 						}
 					},
@@ -225,7 +227,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/delete-calendar-booking-instance': {
+						'<%= request.getContextPath() %>/calendarbooking/delete-calendar-booking-instance': {
 							allFollowing: allFollowing,
 							calendarBookingId: schedulerEvent.get('calendarBookingId'),
 							startDate: CalendarUtil.toUTCTimeZone(schedulerEvent.get('startDate')).getTime()
@@ -340,7 +342,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/get-calendar-booking': {
+						'<%= request.getContextPath() %>/calendarbooking/get-calendar-booking': {
 							calendarBookingId: calendarBookingId
 						}
 					},
@@ -358,7 +360,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/search': {
+						'<%= request.getContextPath() %>/calendarbooking/search': {
 							calendarIds: calendarIds.join(','),
 							calendarResourceIds: STR_BLANK,
 							companyId: COMPANY_ID,
@@ -448,7 +450,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/invoke-transition': {
+						'<%= request.getContextPath() %>/calendarbooking/invoke-transition': {
 							calendarBookingId: schedulerEvent.get('calendarBookingId'),
 							transitionName: instance.getStatusLabel(status).toLowerCase(),
 							userId: USER_ID
@@ -609,7 +611,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/update-calendar-booking': {
+						'<%= request.getContextPath() %>/calendarbooking/update-calendar-booking': {
 							allDay: schedulerEvent.get('allDay'),
 							calendarBookingId: schedulerEvent.get('calendarBookingId'),
 							calendarId: schedulerEvent.get('calendarId'),
@@ -669,7 +671,7 @@ AUI.add(
 
 				instance.invokeService(
 					{
-						'/calendar-portlet/calendarbooking/update-calendar-booking-instance': {
+						'<%= request.getContextPath() %>/calendarbooking/update-calendar-booking-instance': {
 							allDay: schedulerEvent.get('allDay'),
 							allFollowing: allFollowing,
 							calendarBookingId: schedulerEvent.get('calendarBookingId'),
@@ -1017,7 +1019,7 @@ AUI.add(
 						if (instance.get('permissions.UPDATE')) {
 							CalendarUtil.invokeService(
 								{
-									'/calendar-portlet/calendar/update-color': {
+									'<%= request.getContextPath() %>/calendar/update-color': {
 										calendarId: calendarId,
 										color: parseInt(color.substr(1), 16)
 									}
