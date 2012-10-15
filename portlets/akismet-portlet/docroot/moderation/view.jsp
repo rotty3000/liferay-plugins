@@ -19,8 +19,6 @@
 <%
 String tabs1 = ParamUtil.getString(request, "tabs1", "message-boards");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
 portletURL.setParameter("tabs1", tabs1);
 portletURL.setWindowState(WindowState.MAXIMIZED);
 
@@ -32,6 +30,10 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 	param="tabs1"
 	url="<%= portletURL.toString() %>"
 />
+
+<liferay-ui:error exception="<%= NoSuchMessageException.class %>" message="the-message-could-not-be-found" />
+<liferay-ui:error exception="<%= PrincipalException.class %>" message="you-do-not-have-the-required-permissions" />
+<liferay-ui:error exception="<%= RequiredMessageException.class %>" message="you-cannot-delete-a-root-message-that-has-more-than-one-immediate-reply" />
 
 <c:choose>
 	<c:when test='<%= tabs1.equals("message-boards") %>'>
@@ -53,10 +55,10 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 				document.<portlet:namespace />fm.<portlet:namespace />deleteMBMessageIds.value = deleteMBMessageIds;
 
 				if (dicussion) {
-					submitForm(document.<portlet:namespace />fm, "<portlet:actionURL name="deleteDiscussionMBMessages"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>");
+					submitForm(document.<portlet:namespace />fm, "<portlet:actionURL name="deleteDiscussionMBMessages"><portlet:param name="redirect" value="<%= portletURL.toString() %>" /></portlet:actionURL>");
 				}
 				else {
-					submitForm(document.<portlet:namespace />fm, "<portlet:actionURL name="deleteMBMessages"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>");
+					submitForm(document.<portlet:namespace />fm, "<portlet:actionURL name="deleteMBMessages"><portlet:param name="redirect" value="<%= portletURL.toString() %>" /></portlet:actionURL>");
 				}
 			}
 		},
@@ -71,7 +73,7 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 
 			if (notSpamMBMessageIds && confirm('<%= UnicodeLanguageUtil.get(pageContext, "are-you-sure-you-want-to-mark-the-selected-messages-as-not-spam") %>')) {
 				document.<portlet:namespace />fm.<portlet:namespace />notSpamMBMessageIds.value = notSpamMBMessageIds;
-				submitForm(document.<portlet:namespace />fm, "<portlet:actionURL name="markNotSpam"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>");
+				submitForm(document.<portlet:namespace />fm, "<portlet:actionURL name="markNotSpam"><portlet:param name="redirect" value="<%= portletURL.toString() %>" /></portlet:actionURL>");
 			}
 		},
 		['liferay-util-list-fields']

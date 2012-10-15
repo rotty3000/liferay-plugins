@@ -93,7 +93,7 @@ for (MicroblogsEntry microblogsEntry : microblogsEntries) {
 
 				Pattern pattern = Pattern.compile("\\#\\S*");
 
-				Matcher matcher = pattern.matcher(content);
+				Matcher matcher = pattern.matcher(microblogsEntry.getContent());
 
 				while (matcher.find()) {
 					String result = matcher.group();

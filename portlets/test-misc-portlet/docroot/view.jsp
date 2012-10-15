@@ -72,8 +72,8 @@
 <h3>Scheduler</h3>
 
 <p>
-	TestSchedulerMessageListener.isReceived=<%= _assertTrue(TestSchedulerMessageListener.isReceived()) %><br />
-	TestSchedulerUtil.isReceivedBeforeSpringInitialzed=<%= _assertTrue(!TestSchedulerUtil.isReceivedBeforeSpringInitialzed()) %>
+	TestPortletConfigMessageListener.isReceived=<%= _assertTrue(TestPortletConfigMessageListener.isReceived()) %>
+	TestSpringConfigMessageListener.isReceived=<%= _assertTrue(TestSpringConfigMessageListener.isReceived()) %><br />
 </p>
 
 <h3>Servlet Request</h3>
