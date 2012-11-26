@@ -48,10 +48,37 @@
 	<target name="jar" depends="compile">
 		<mkdir dir="${project.dir}/dist" />
 
-		<jar
-			basedir="classes"
-			jarfile="${plugin.file}"
-		/>
+		<if>
+			<available file="bnd.bnd" />
+			<then>
+				<manifest-helper />
+
+				<bndexpand propertyfile="${project.dir}/common.bnd" />
+
+				<bnd
+					eclipse="false"
+					exceptions="true"
+					failok="false"
+					inherit="true"
+					output="${plugin.file}"
+					sourcepath="src"
+				>
+					<bndfiles path="bnd.bnd" />
+					<classpath>
+						<pathelement location="classes" />
+					</classpath>
+				</bnd>
+			</then>
+			<else>
+				<antcall target="manifest" />
+
+				<jar
+					basedir="classes"
+					jarfile="${plugin.file}"
+					manifest="classes/META-INF/MANIFEST.MF"
+				/>
+			</else>
+		</if>
 	</target>
 
 	<target name="war">
