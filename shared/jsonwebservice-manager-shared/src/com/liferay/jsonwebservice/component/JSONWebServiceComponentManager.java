@@ -17,6 +17,7 @@ package com.liferay.jsonwebservice.component;
 import aQute.bnd.annotation.component.Activate;
 import aQute.bnd.annotation.component.Component;
 import aQute.bnd.annotation.component.Deactivate;
+import aQute.bnd.annotation.component.Reference;
 
 import com.liferay.portal.jsonwebservice.JSONWebServiceRegistrator;
 import com.liferay.portal.kernel.annotation.AnnotationLocator;
@@ -24,6 +25,8 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionsManagerUtil;
 import com.liferay.portal.spring.context.PortalContextLoaderListener;
 import com.liferay.portal.util.PropsValues;
+
+import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -111,8 +114,21 @@ public class JSONWebServiceComponentManager
 			service);
 	}
 
+	/**
+	 * This is a method which forces this component to not be fully initialized
+	 * until
+	 */
+	@Reference(
+		optional=false,
+		target="(original.bean=*)"
+	)
+	public void addServletContext(ServletContext servletContext) {
+		_servletContext = servletContext;
+	}
+
 	private BundleContext _bundleContext;
 	private JSONWebServiceRegistrator _jsonWebServiceRegistrator;
 	private ServiceTracker<Object, Object> _serviceTracker;
+	private ServletContext _servletContext;
 
 }
