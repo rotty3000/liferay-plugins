@@ -77,6 +77,8 @@ public class MyAction extends SimpleAction {
 			return;
 		}
 
+		System.out.println("The ids: " + ids);
+
 		if ((ids != null) && (ids.length > 0)) {
 			for (String id : ids ) {
 				long companyId = GetterUtil.getLong(id);
