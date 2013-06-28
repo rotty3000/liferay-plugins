@@ -1,0 +1,5 @@
+/lib/sample-metrics-core-shared.jar
+/lib/org.osgi.core.jar
+/lib/org.osgi.compendium.jar
+/lib/portal-compat-shared.jar
+/lib/org.apache.felix.configadmin.jar
