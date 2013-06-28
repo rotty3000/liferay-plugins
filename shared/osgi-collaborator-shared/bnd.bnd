@@ -1,0 +1,4 @@
+Import-Package: *
+Include-Resource: classes
+Service-Component: *
+Export-Package: *

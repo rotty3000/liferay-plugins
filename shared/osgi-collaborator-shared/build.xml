@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+
+<project name="osgi-collaborator-shared" basedir="." default="deploy">
+	<property name="plugin.version" value="1" />
+	<property name="import.shared" value="osgi-json-webservice-shared" />
+
+	<import file="../../build-common-osgi-plugin.xml" />
+</project>
