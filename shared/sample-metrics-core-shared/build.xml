@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<project name="sample-metrics-core-shared" basedir="." default="compile">
+	<property name="plugin.version" value="1" />
+
+	<import file="../../build-common-osgi-plugin.xml" />
+
+	<property name="osgi.dependencies" value="org.apache.felix.configadmin.jar" />
+</project>
