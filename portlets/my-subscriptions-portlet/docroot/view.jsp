@@ -17,9 +17,9 @@
 <%@ include file="/init.jsp" %>
 
 <%
-List<Subscription> viewableSubscriptions = new ArrayList<Subscription>();
-
 List<Subscription> subscriptions = SubscriptionLocalServiceUtil.getUserSubscriptions(user.getUserId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, new SubscriptionClassNameIdComparator(true));
+
+List<Subscription> viewableSubscriptions = new ArrayList<Subscription>();
 
 for (Subscription subscription : subscriptions) {
 	if (SubscriptionPermissionUtil.contains(permissionChecker, subscription.getClassName(), subscription.getClassPK(), null, 0)) {
