@@ -21,9 +21,9 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
-
-import javax.servlet.ServletContext;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -43,23 +43,12 @@ public class HttpSupport {
 
 		_bundleContext = bundleContext;
 		_webExtenderServlet = webExtenderServlet;
+
+		_serviceFactoryCache = new HashMap<Bundle, HttpServiceWrapper>();
 	}
 
 	public BundleContext getBundleContext() {
 		return _bundleContext;
-	}
-
-	public BundleServletContext getBundleServletContext(Bundle bundle)
-		throws InvalidSyntaxException {
-
-		BundleServletContext bundleServletContext = getWABBundleServletContext(
-			bundle);
-
-		if (bundleServletContext != null) {
-			return bundleServletContext;
-		}
-
-		return getNonWABBundleServletContext(bundle);
 	}
 
 	public Filter getFilter(Bundle bundle) throws InvalidSyntaxException {
@@ -106,30 +95,84 @@ public class HttpSupport {
 		return null;
 	}
 
-	public BundleServletContext getNonWABBundleServletContext(Bundle bundle) {
+	public HttpServiceWrapper getHttpService(Bundle bundle) {
+		HttpServiceWrapper httpServiceWrapper = _serviceFactoryCache.get(
+			bundle);
+
+		if (httpServiceWrapper != null) {
+			return httpServiceWrapper;
+		}
+
+		httpServiceWrapper = doGetService(bundle);
+
+		_serviceFactoryCache.put(bundle, httpServiceWrapper);
+
+		return httpServiceWrapper;
+	}
+
+	public WebExtenderServlet getWebExtenderServlet() {
+		return _webExtenderServlet;
+	}
+
+	public void ungetHttpService(Bundle bundle) {
+		HttpServiceWrapper httpServiceWrapper = _serviceFactoryCache.get(
+			bundle);
+
+		if (httpServiceWrapper == null) {
+			return;
+		}
+
+		BundleServletContext bundleServletContext =
+			httpServiceWrapper.getBundleServletContext();
+
+		String servletContextName =
+			bundleServletContext.getServletContextName();
+
+		ServletContextPool.remove(servletContextName);
+
+		bundleServletContext.close();
+
+		_serviceFactoryCache.remove(bundle);
+	}
+
+	protected HttpServiceWrapper doGetService(Bundle bundle) {
+		try {
+			BundleServletContext bundleServletContext =
+				getWABBundleServletContext(bundle);
+
+			if (bundleServletContext != null) {
+				ServletContextPool.put(
+					bundleServletContext.getServletContextName(),
+					bundleServletContext);
+
+				return new HttpServiceWrapper(bundleServletContext);
+			}
+
+			bundleServletContext = getNonWABBundleServletContext(bundle);
+
+			ServletContextPool.put(
+				bundleServletContext.getServletContextName(),
+				bundleServletContext);
+
+			return new NonWABHttpServiceWrapper(bundleServletContext);
+		}
+		catch (InvalidSyntaxException ise) {
+			throw new IllegalStateException(ise);
+		}
+	}
+
+	protected BundleServletContext getNonWABBundleServletContext(
+		Bundle bundle) {
+
 		String servletContextName = BundleServletContext.getServletContextName(
 			bundle, true);
 
-		ServletContext servletContext = ServletContextPool.get(
-			servletContextName);
-
-		if (servletContext == null) {
-			BundleServletContext bundleServletContext =
-				new BundleServletContext(
-					bundle, servletContextName,
-					_webExtenderServlet.getServletContext());
-
-			bundleServletContext.setServletContextName(servletContextName);
-
-			ServletContextPool.put(servletContextName, bundleServletContext);
-
-			servletContext = bundleServletContext;
-		}
-
-		return (BundleServletContext)servletContext;
+		return new BundleServletContext(
+			bundle, servletContextName,
+			_webExtenderServlet.getServletContext());
 	}
 
-	public BundleServletContext getWABBundleServletContext(Bundle bundle)
+	protected BundleServletContext getWABBundleServletContext(Bundle bundle)
 		throws InvalidSyntaxException {
 
 		Filter filter = getFilter(bundle);
@@ -151,11 +194,8 @@ public class HttpSupport {
 		return null;
 	}
 
-	public WebExtenderServlet getWebExtenderServlet() {
-		return _webExtenderServlet;
-	}
-
 	private BundleContext _bundleContext;
+	private Map<Bundle, HttpServiceWrapper> _serviceFactoryCache;
 	private WebExtenderServlet _webExtenderServlet;
 
 }

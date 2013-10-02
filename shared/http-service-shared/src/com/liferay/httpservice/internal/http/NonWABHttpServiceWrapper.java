@@ -15,7 +15,6 @@
 package com.liferay.httpservice.internal.http;
 
 import com.liferay.httpservice.internal.servlet.BundleServletContext;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -135,14 +134,6 @@ public class NonWABHttpServiceWrapper extends HttpServiceWrapper {
 
 	protected void removeRegistration(Object object) {
 		_registrations.remove(object);
-
-		if (!_registrations.isEmpty()) {
-			return;
-		}
-
-		ServletContextPool.remove(bundleServletContext.getServletContextName());
-
-		bundleServletContext = null;
 	}
 
 	private List<Object> _registrations = new ArrayList<Object>();

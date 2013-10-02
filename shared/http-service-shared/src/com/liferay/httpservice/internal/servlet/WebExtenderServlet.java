@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
-import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -59,7 +58,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * @author Raymond Augé
  * @author Miguel Pastor
  */
-public class WebExtenderServlet extends PortletServlet implements StrutsAction {
+public class WebExtenderServlet extends PortletServlet {
 
 	public WebExtenderServlet(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
@@ -73,27 +72,6 @@ public class WebExtenderServlet extends PortletServlet implements StrutsAction {
 		_servletTracker.close();
 
 		super.destroy();
-	}
-
-	@Override
-	public String execute(
-			HttpServletRequest request, HttpServletResponse response)
-		throws Exception {
-
-		service(request, response);
-
-		return null;
-	}
-
-	@Override
-	public String execute(
-			StrutsAction originalStrutsAction, HttpServletRequest request,
-			HttpServletResponse response)
-		throws Exception {
-
-		service(request, response);
-
-		return null;
 	}
 
 	public BundleContext getBundleContext() {
@@ -150,6 +128,14 @@ public class WebExtenderServlet extends PortletServlet implements StrutsAction {
 
 		ServletContext servletContext = getServletContext(
 			portletId, requestURI);
+
+		if (servletContext == null) {
+			response.sendError(
+				HttpServletResponse.SC_NOT_FOUND,
+				"No servlet or resource mapped to " + requestURI);
+
+			return;
+		}
 
 		service(request, response, servletContext, portletId, requestURI);
 	}
@@ -232,43 +218,24 @@ public class WebExtenderServlet extends PortletServlet implements StrutsAction {
 			ServletContext servletContext, String portletId, String requestURI)
 		throws IOException, ServletException {
 
-		BundleServletContext bundleServletContext =
-			(BundleServletContext)servletContext;
+		RequestDispatcher requestDispatcher =
+			servletContext.getRequestDispatcher(requestURI);
 
-		Thread currentThread = Thread.currentThread();
+		if (requestDispatcher != null) {
+			requestDispatcher.forward(request, response);
 
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		try {
-			currentThread.setContextClassLoader(
-				bundleServletContext.getClassLoader());
-
-			RequestDispatcher requestDispatcher =
-				bundleServletContext.getRequestDispatcher(requestURI);
-
-			if (requestDispatcher != null) {
-				requestDispatcher.forward(request, response);
-
-				return;
-			}
-
-			if (requestURI.endsWith("/invoke") &&
-				Validator.isNotNull(portletId)) {
-
-				super.service(request, response);
-
-				return;
-			}
-
-			PortalUtil.sendError(
-				HttpServletResponse.SC_NOT_FOUND,
-				new IllegalArgumentException(
-					"No servlet or resource mapped to " + requestURI),
-				request, response);
+			return;
 		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
+
+		if (requestURI.endsWith("/invoke") && Validator.isNotNull(portletId)) {
+			super.service(request, response);
+
+			return;
 		}
+
+		response.sendError(
+			HttpServletResponse.SC_NOT_FOUND,
+			"No servlet or resource mapped to " + requestURI);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(WebExtenderServlet.class);
