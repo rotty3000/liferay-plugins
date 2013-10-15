@@ -1,0 +1,6 @@
+Bundle-Name: Sample JVM Metrics
+Import-Package:\
+	com.liferay.metrics.api.*,\
+	*
+Include-Resource: classes
+Service-Component:com.liferay.metrics.*

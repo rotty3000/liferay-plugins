@@ -1,0 +1,8 @@
+Bundle-Name: Sample Metrics core
+Export-Package:\
+	com.liferay.metrics.*
+Import-Package:\
+	com.liferay.metrics.*,\
+	*
+Include-Resource: classes
+Service-Component:com.liferay.metrics.*
