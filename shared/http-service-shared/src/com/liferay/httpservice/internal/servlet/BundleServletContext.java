@@ -174,7 +174,13 @@ public class BundleServletContext extends LiferayServletContext {
 		super(servletContext);
 
 		_bundle = bundle;
-		_servletContextName = servletContextName;
+
+		if (servletContextName == null) {
+			_servletContextName = StringPool.BLANK;
+		}
+		else {
+			_servletContextName = servletContextName;
+		}
 
 		_httpContext = new DefaultHttpContext(_bundle);
 	}
@@ -256,7 +262,12 @@ public class BundleServletContext extends LiferayServletContext {
 		sb.append(PortalUtil.getPathContext());
 		sb.append(Portal.PATH_MODULE);
 		sb.append(StringPool.SLASH);
-		sb.append(getServletContextName());
+
+		String servletContextName = getServletContextName();
+
+		if (Validator.isNotNull(servletContextName)) {
+			sb.append(servletContextName);
+		}
 
 		_contextPath = sb.toString();
 
@@ -445,8 +456,7 @@ public class BundleServletContext extends LiferayServletContext {
 		properties.put("bundle.id", _bundle.getBundleId());
 		properties.put("bundle.symbolicName", _bundle.getSymbolicName());
 		properties.put("bundle.version", _bundle.getVersion());
-		properties.put(
-			"Web-ContextPath", StringPool.SLASH.concat(_servletContextName));
+		properties.put("Web-ContextPath", getContextPath());
 
 		BundleContext bundleContext = _bundle.getBundleContext();
 
@@ -646,9 +656,20 @@ public class BundleServletContext extends LiferayServletContext {
 			registerServlet(
 				name, alias, resourceServlet, initParameters, httpContext);
 
-			AuthPublicPathRegistry.register(
-				Portal.PATH_MODULE + StringPool.SLASH + _servletContextName +
-					alias);
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(Portal.PATH_MODULE);
+			sb.append(StringPool.SLASH);
+
+			String servletContextName = getServletContextName();
+
+			if (Validator.isNotNull(servletContextName)) {
+				sb.append(servletContextName);
+			}
+
+			sb.append(alias);
+
+			AuthPublicPathRegistry.register(sb.toString());
 		}
 		catch (ServletException se) {
 			throw new IllegalArgumentException(se);
@@ -848,23 +869,33 @@ public class BundleServletContext extends LiferayServletContext {
 		while (iterator.hasNext()) {
 			Map.Entry<String, Servlet> entry = iterator.next();
 
+			String alias = entry.getKey();
 			Servlet curServlet = entry.getValue();
 
 			if (curServlet != servlet) {
 				continue;
 			}
 
-			AuthPublicPathRegistry.unregister(
-				Portal.PATH_MODULE + StringPool.SLASH + _servletContextName +
-					entry.getKey());
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(Portal.PATH_MODULE);
+			sb.append(StringPool.SLASH);
+
+			String servletContextName = getServletContextName();
+
+			if (Validator.isNotNull(servletContextName)) {
+				sb.append(servletContextName);
+			}
+
+			sb.append(alias);
+
+			AuthPublicPathRegistry.unregister(alias);
 
 			iterator.remove();
 
 			if (_log.isInfoEnabled()) {
-				String urlPattern = entry.getKey();
-
 				_log.info(
-					"Unmapped servlet " + servletName + " from " + urlPattern);
+					"Unmapped servlet " + servletName + " from " + alias);
 			}
 		}
 
@@ -914,7 +945,13 @@ public class BundleServletContext extends LiferayServletContext {
 		File parentTempDir = (File)super.getAttribute(
 			JavaConstants.JAVAX_SERVLET_CONTEXT_TEMPDIR);
 
-		File tempDir = new File(parentTempDir, _servletContextName);
+		String fileName = getServletContextName();
+
+		if (Validator.isNull(fileName)) {
+			fileName = String.valueOf(_bundle.getBundleId());
+		}
+
+		File tempDir = new File(parentTempDir, fileName);
 
 		if (!tempDir.exists() && !tempDir.mkdirs()) {
 			throw new IllegalStateException(

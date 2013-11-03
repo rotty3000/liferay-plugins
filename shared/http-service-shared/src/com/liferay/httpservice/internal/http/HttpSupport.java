@@ -16,9 +16,9 @@ package com.liferay.httpservice.internal.http;
 
 import com.liferay.httpservice.internal.servlet.BundleServletContext;
 import com.liferay.httpservice.internal.servlet.WebExtenderServlet;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.xml.DocumentException;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -125,11 +125,6 @@ public class HttpSupport {
 		BundleServletContext bundleServletContext =
 			httpServiceWrapper.getBundleServletContext();
 
-		String servletContextName =
-			bundleServletContext.getServletContextName();
-
-		ServletContextPool.remove(servletContextName);
-
 		bundleServletContext.close();
 
 		_serviceFactoryCache.remove(bundle);
@@ -138,41 +133,34 @@ public class HttpSupport {
 	protected HttpServiceWrapper doGetService(Bundle bundle) {
 		try {
 			BundleServletContext bundleServletContext =
-				getWABBundleServletContext(bundle);
+				getBundleServletContext(bundle);
 
 			if (bundleServletContext != null) {
-				ServletContextPool.put(
-					bundleServletContext.getServletContextName(),
-					bundleServletContext);
-
 				return new HttpServiceWrapper(bundleServletContext);
 			}
 
 			bundleServletContext = getNonWABBundleServletContext(bundle);
 
-			ServletContextPool.put(
-				bundleServletContext.getServletContextName(),
-				bundleServletContext);
-
 			return new NonWABHttpServiceWrapper(bundleServletContext);
 		}
-		catch (InvalidSyntaxException ise) {
-			throw new IllegalStateException(ise);
+		catch (Exception e) {
+			throw new IllegalStateException(e);
 		}
 	}
 
 	protected BundleServletContext getNonWABBundleServletContext(
-		Bundle bundle) {
+			Bundle bundle)
+		throws DocumentException {
 
-		String servletContextName = BundleServletContext.getServletContextName(
-			bundle, true);
+		BundleServletContext bundleServletContext = new BundleServletContext(
+			bundle, null, _webExtenderServlet.getServletContext());
 
-		return new BundleServletContext(
-			bundle, servletContextName,
-			_webExtenderServlet.getServletContext());
+		bundleServletContext.open();
+
+		return bundleServletContext;
 	}
 
-	protected BundleServletContext getWABBundleServletContext(Bundle bundle)
+	protected BundleServletContext getBundleServletContext(Bundle bundle)
 		throws InvalidSyntaxException {
 
 		Filter filter = getFilter(bundle);

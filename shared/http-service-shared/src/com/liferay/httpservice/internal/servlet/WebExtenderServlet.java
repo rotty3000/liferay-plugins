@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -125,6 +126,13 @@ public class WebExtenderServlet extends PortletServlet {
 
 		String portletId = (String)request.getAttribute(WebKeys.PORTLET_ID);
 		String requestURI = request.getRequestURI();
+
+		String includeRequestURI = (String)request.getAttribute(
+			JavaConstants.JAVAX_SERVLET_INCLUDE_PATH_INFO);
+
+		if (Validator.isNotNull(includeRequestURI)) {
+			requestURI = includeRequestURI;
+		}
 
 		ServletContext servletContext = getServletContext(
 			portletId, requestURI);
