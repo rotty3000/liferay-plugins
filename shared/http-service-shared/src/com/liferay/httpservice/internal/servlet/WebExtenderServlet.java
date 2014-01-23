@@ -15,10 +15,8 @@
 package com.liferay.httpservice.internal.servlet;
 
 import com.liferay.httpservice.internal.http.ExtendedHttpService;
-import com.liferay.httpservice.internal.http.FilterTracker;
 import com.liferay.httpservice.internal.http.HttpServiceFactory;
 import com.liferay.httpservice.internal.http.HttpSupport;
-import com.liferay.httpservice.internal.http.ServletTracker;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.PortletServlet;
@@ -40,9 +38,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import javax.servlet.Filter;
 import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -53,7 +49,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Raymond Augé
@@ -67,10 +62,8 @@ public class WebExtenderServlet extends PortletServlet {
 
 	@Override
 	public void destroy() {
-		_filterTracker.close();
 		_httpServiceRegistration.unregister();
 		_httpServletRegistration.unregister();
-		_servletTracker.close();
 
 		super.destroy();
 	}
@@ -84,11 +77,6 @@ public class WebExtenderServlet extends PortletServlet {
 		super.init(servletConfig);
 
 		HttpSupport httpSupport = new HttpSupport(_bundleContext, this);
-
-		_filterTracker = new ServiceTracker<Filter, Filter>(
-			_bundleContext, Filter.class, new FilterTracker(httpSupport));
-
-		_filterTracker.open();
 
 		HttpServiceFactory httpServiceFactory = new HttpServiceFactory(
 			httpSupport);
@@ -110,11 +98,6 @@ public class WebExtenderServlet extends PortletServlet {
 
 		_httpServletRegistration = _bundleContext.registerService(
 			HttpServlet.class, this, properties);
-
-		_servletTracker = new ServiceTracker<Servlet, Servlet>(
-			_bundleContext, Servlet.class, new ServletTracker(httpSupport));
-
-		_servletTracker.open();
 	}
 
 	@Override
@@ -249,9 +232,7 @@ public class WebExtenderServlet extends PortletServlet {
 	private static Log _log = LogFactoryUtil.getLog(WebExtenderServlet.class);
 
 	private BundleContext _bundleContext;
-	private ServiceTracker<Filter, Filter> _filterTracker;
 	private ServiceRegistration<?> _httpServiceRegistration;
 	private ServiceRegistration<HttpServlet> _httpServletRegistration;
-	private ServiceTracker<Servlet, Servlet> _servletTracker;
 
 }
