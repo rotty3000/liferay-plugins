@@ -88,7 +88,7 @@ public class LiferayHttpService extends HttpServlet
 				"(provider=Liferay Inc.))");
 		_mappings = new ConcurrentHashMap<String, Object>();
 		_servletContext = new AtomicReference<ServletContext>();
-		_serviceRegistration =
+		_serviceRegistrations =
 			new ConcurrentHashMap<String, ServiceRegistration<?>>();
 	}
 
@@ -147,7 +147,7 @@ public class LiferayHttpService extends HttpServlet
 			bundleContext.registerService(
 				Servlet.class, new ResourceServlet(), properties);
 
-		_serviceRegistration.put(alias, serviceRegistration);
+		_serviceRegistrations.put(alias, serviceRegistration);
 	}
 
 	@Deprecated
@@ -188,14 +188,14 @@ public class LiferayHttpService extends HttpServlet
 			bundleContext.registerService(
 				Servlet.class, servlet, properties);
 
-		_serviceRegistration.put(alias, serviceRegistration);
+		_serviceRegistrations.put(alias, serviceRegistration);
 	}
 
 	@Override
 	@Deprecated
 	public void unregister(String alias) {
 		ServiceRegistration<?> serviceRegistration =
-			_serviceRegistration.remove(alias);
+			_serviceRegistrations.remove(alias);
 
 		if (serviceRegistration == null) {
 			return;
@@ -607,7 +607,7 @@ public class LiferayHttpService extends HttpServlet
 	private HttpContext _defaultHttpContext;
 	private Filter _defaultContextFilter;
 	private Map<String, Object> _mappings;
-	private Map<String, ServiceRegistration<?>> _serviceRegistration;
+	private Map<String, ServiceRegistration<?>> _serviceRegistrations;
 	private AtomicReference<ServletContext> _servletContext;
 
 }
