@@ -18,26 +18,33 @@ package org.osgi.service.http;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.framework.Bundle;
 
 /**
- * Context for HTTP Requests.
+ * Helper service for the servlet context used by whiteboard services for HTTP
+ * requests.
  * 
  * <p>
- * This service defines methods that the Http Service may call to get
- * information for a request.
+ * This service defines methods that the Http Service implementation may call to
+ * get information for a request when dealing with whiteboard services.
  * 
  * <p>
- * Servlets may be associated with an {@code HttpContext} service. Servlets that
- * are associated using the same {@code HttpContext} object will share the same
- * {@code ServletContext} object.
+ * Servlets, servlet filters, resources, and listeners services may be
+ * {@link HttpConstants#HTTP_WHITEBOARD_CONTEXT_NAME associated} with an
+ * {@code ServletContextHelper} service. Those whiteboard services that are
+ * associated using the same {@code ServletContextHelper} object will share the
+ * same {@code ServletContext} object.
  * 
  * <p>
- * If no {@code HttpContext} service is associated, a default
- * {@code HttpContext} is used. The behavior of the methods on the default
- * {@code HttpContext} is defined as follows:
+ * If no {@code ServletContextHelper} service is associated, a default
+ * {@code ServletContextHelper} is used. The behavior of the methods on the
+ * default {@code ServletContextHelper} is defined as follows:
  * <ul>
  * <li>{@code getMimeType} - Does not define any customized MIME types for the
  * {@code Content-Type} header in the response, and always returns {@code null}.
@@ -45,28 +52,36 @@ import org.osgi.annotation.versioning.ConsumerType;
  * <li>{@code handleSecurity} - Performs implementation-defined authentication
  * on the request.</li>
  * <li>{@code getResource} - Assumes the named resource is in the bundle of the
- * servlet service. This method calls the servlet bundle's
+ * whiteboard service. This method calls the whiteboard service bundle's
  * {@code Bundle.getResource} method, and returns the appropriate URL to access
  * the resource. On a Java runtime environment that supports permissions, the
  * Http Service needs to be granted
  * {@code org.osgi.framework.AdminPermission[*,RESOURCE]}.</li>
+ * <li>{@code getResourcePaths} - Assumes that the resources are in the bundle
+ * of the whiteboard service. This method calls {@code Bundle.findEntries}
+ * method, and returnes the found entries. On a Java runtime environment that
+ * supports permissions, the Http Service needs to be granted
+ * {@code org.osgi.framework.AdminPermission[*,RESOURCE]}.</li>
+ * <li>{@code getRealPath} - This method returns {@code null}.
  * </ul>
  * 
+ * It is possible to register own {@code ServletContextHelper} services with a
+ * {@link HttpConstants#HTTP_WHITEBOARD_CONTEXT_NAME service property}.
  * 
  * @ThreadSafe
- * @author $Id: 3872044c4d47c386f37558f6f3a2d79d21c0a731 $
- * @deprecated As of 1.3. Use the whiteboard pattern to register http context by
- *             registering {@link ServletContextHelper} services.
+ * @author $Id: 8d0077e068e7f86c2164f89907e398d0f397000d $
+ * @see HttpConstants#HTTP_WHITEBOARD_CONTEXT_NAME
+ * @see HttpConstants#HTTP_WHITEBOARD_CONTEXT_SHARED
+ * 
+ * @since 1.3
  */
 @ConsumerType
-public interface HttpContext {
+public abstract class ServletContextHelper {
 	/**
 	 * {@code HttpServletRequest} attribute specifying the name of the
 	 * authenticated user. The value of the attribute can be retrieved by
 	 * {@code HttpServletRequest.getRemoteUser}. This attribute name is
 	 * {@code org.osgi.service.http.authentication.remote.user}.
-	 * 
-	 * @since 1.1
 	 */
 	public static final String	REMOTE_USER			= "org.osgi.service.http.authentication.remote.user";
 	/**
@@ -74,8 +89,6 @@ public interface HttpContext {
 	 * authentication. The value of the attribute can be retrieved by
 	 * {@code HttpServletRequest.getAuthType}. This attribute name is
 	 * {@code org.osgi.service.http.authentication.type}.
-	 * 
-	 * @since 1.1
 	 */
 	public static final String	AUTHENTICATION_TYPE	= "org.osgi.service.http.authentication.type";
 	/**
@@ -84,10 +97,29 @@ public interface HttpContext {
 	 * service. The value of the attribute can be retrieved by
 	 * {@code HttpServletRequest.getAttribute(HttpContext.AUTHORIZATION)}. This
 	 * attribute name is {@code org.osgi.service.useradmin.authorization}.
-	 * 
-	 * @since 1.1
 	 */
 	public static final String	AUTHORIZATION		= "org.osgi.service.useradmin.authorization";
+
+	/** Bundle associated with this context. */
+	private Bundle				bundle;
+
+	/**
+	 * Set the bundle associated with this context.
+	 * 
+	 * @param b The bundle
+	 */
+	protected void setBundle(final Bundle b) {
+		this.bundle = b;
+	}
+
+	/**
+	 * Get the associated bundle
+	 * 
+	 * @return The bundle or {@code null}
+	 */
+	protected Bundle getBundle() {
+		return this.bundle;
+	}
 
 	/**
 	 * Handles security for the specified request.
@@ -145,42 +177,103 @@ public interface HttpContext {
 	 * @throws java.io.IOException may be thrown by this method. If this occurs,
 	 *         the Http Service will terminate the request and close the socket.
 	 */
-	public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException;
+	public boolean handleSecurity(final HttpServletRequest request, final HttpServletResponse response)
+			throws IOException {
+		return true;
+	}
 
 	/**
 	 * Maps a resource name to a URL.
 	 * 
 	 * <p>
-	 * Called by the Http Service to map a resource name to a URL. For servlet
-	 * registrations, Http Service will call this method to support the
-	 * <code>ServletContext</code> methods <code>getResource</code> and
-	 * <code>getResourceAsStream</code>. For resource registrations, Http
-	 * Service will call this method to locate the named resource. The context
-	 * can control from where resources come. For example, the resource can be
-	 * mapped to a file in the bundle's persistent storage area via
-	 * <code>bundleContext.getDataFile(name).toURL()</code> or to a resource in
-	 * the context's bundle via <code>getClass().getResource(name)</code>
+	 * Called by the Http Service to map the specified resource name to a URL.
+	 * For servlets, Http Service will call this method to support the
+	 * {@code ServletContext} methods {@code getResource} and
+	 * {@code getResourceAsStream}. For resource servlets, Http Service will
+	 * call this method to locate the named resource.
 	 * 
-	 * @param name the name of the requested resource
-	 * @return URL that Http Service can use to read the resource or
-	 *         <code>null</code> if the resource does not exist.
+	 * <p>
+	 * The context can control from where resources come. For example, the
+	 * resource can be mapped to a file in the bundle's persistent storage area
+	 * via {@code bundleContext.getDataFile(name).toURL()} or to a resource in
+	 * the context's bundle via {@code getClass().getResource(name)}
+	 * 
+	 * @param name The name of the requested resource.
+	 * @return A URL that Http Service can use to read the resource or
+	 *         {@code null} if the resource does not exist.
 	 */
-	public URL getResource(String name);
+	public URL getResource(String name) {
+		final Bundle localBundle = this.getBundle();
+		if (localBundle != null) {
+			if (name.startsWith("/")) {
+				name = name.substring(1);
+			}
+
+			return this.bundle.getResource(name);
+		}
+		return null;
+	}
 
 	/**
 	 * Maps a name to a MIME type.
 	 * 
 	 * <p>
 	 * Called by the Http Service to determine the MIME type for the specified
-	 * name. For servlets, the Http Service will call this method to support the
-	 * {@code ServletContext} method {@code getMimeType}. For resources, the
-	 * Http Service will call this method to determine the MIME type for the
-	 * {@code Content-Type} header in the response.
+	 * name. For whiteboard services, the Http Service will call this method to
+	 * support the {@code ServletContext} method {@code getMimeType}. For
+	 * resource servlets, the Http Service will call this method to determine
+	 * the MIME type for the {@code Content-Type} header in the response.
 	 * 
 	 * @param name The name for which to determine the MIME type.
 	 * @return The MIME type (e.g. text/html) of the specified name or
 	 *         {@code null} to indicate that the Http Service should determine
 	 *         the MIME type itself.
 	 */
-	public String getMimeType(String name);
+	public String getMimeType(String name) {
+		return null;
+	}
+
+	/**
+	 * Returns a directory-like listing of all the paths to resources within the
+	 * web application whose longest sub-path matches the supplied path
+	 * argument.
+	 * 
+	 * <p>
+	 * Called by the Http Service to support the {@code ServletContext} method
+	 * {@code getResourcePaths} for whiteboard services.
+	 * 
+	 * @param path the partial path used to match the resources, which must
+	 *        start with a /
+	 * @return a Set containing the directory listing, or null if there are no
+	 *         resources in the web application whose path begins with the
+	 *         supplied path.
+	 */
+	public Set<String> getResourcePaths(final String path) {
+		final Bundle localBundle = this.getBundle();
+		if (localBundle != null) {
+			final Enumeration<URL> e = localBundle.findEntries(path, null, false);
+			if (e != null) {
+				final Set<String> result = new HashSet<String>();
+				while (e.hasMoreElements()) {
+					result.add(e.nextElement().toExternalForm());
+				}
+				return result;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the real path corresponding to the given virtual path.
+	 * 
+	 * <p>
+	 * Called by the Http Service to support the {@code ServletContext} method
+	 * {@code getRealPath} for whiteboard services.
+	 * 
+	 * @param path the virtual path to be translated to a real path
+	 * @return the real path, or null if the translation cannot be performed
+	 */
+	public String getRealPath(String path) {
+		return null;
+	}
 }

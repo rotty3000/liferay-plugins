@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.osgi.service.http.runtime.HttpServiceRuntime;
 /**
  * Defines standard names for Http Service constants.
  * 
- * @author $Id: 090036680102766f5ae9ac805619b2ac3be45c84 $
+ * @author $Id: cd6ff8b6af56fc60f173a9b1721a24738fc60c4f $
  * @since 1.3
  */
 public final class HttpConstants {
@@ -31,18 +31,41 @@ public final class HttpConstants {
 	}
 
 	/**
-	 * Service property specifying the name of an {@link HttpContext} service.
+	 * Service property specifying the name(s) of an {@link ServletContextHelper}
+	 * service.
 	 * 
 	 * <p>
-	 * For {@link HttpContext} services, this service property must be
+	 * For {@link ServletContextHelper} services, this service property must be
 	 * specified. Http Context services without this service property must be
 	 * ignored.
+	 * 
+	 * <p>
+	 * Servlet, listener, servlet filter, and resource servlet services might
+	 * refer to a specific {@link ServletContextHelper} service referencing the
+	 * name with the {@link #HTTP_WHITEBOARD_CONTEXT_SELECT} property. If this
+	 * {@link ServletContextHelper} service should be shared between different
+	 * bundles, the {@link #HTTP_WHITEBOARD_CONTEXT_SHARED} service property
+	 * must be set to true
+	 * 
+	 * <p>
+	 * For {@link ServletContextHelper} services, the value of this service
+	 * property must be of type {@code String}, {@code String[]}, or
+	 * {@code Collection<String>}. F
+	 * 
+	 * @see #HTTP_WHITEBOARD_CONTEXT_SHARED
+	 * @see #HTTP_WHITEBOARD_CONTEXT_SELECT
+	 */
+	public static final String	HTTP_WHITEBOARD_CONTEXT_NAME			= "osgi.http.whiteboard.context.name";
+
+	/**
+	 * Service property referencing the name of an {@link ServletContextHelper}
+	 * service.
 	 * 
 	 * <p>
 	 * For servlet, listener, servlet filter, or resource servlet services, this
 	 * service property refers to the name of the associated Http Context
 	 * service. If this service property is not specified, then the default Http
-	 * Conext must be used. If there is no Http Context service matching the
+	 * Context must be used. If there is no Http Context service matching the
 	 * specified name or the matching Http Context service is registered by
 	 * another bundle but does not have the
 	 * {@link #HTTP_WHITEBOARD_CONTEXT_SHARED} service property set to true, the
@@ -50,20 +73,18 @@ public final class HttpConstants {
 	 * ignored.
 	 * 
 	 * <p>
-	 * For {@link HttpContext} services, the value of this service property must
-	 * be of type {@code String}, {@code String[]}, or
-	 * {@code Collection<String>}. For servlet, listener, servlet filter, or
-	 * resource servlet services, the value of this service property must be of
-	 * type {@code String}
+	 * For servlet, listener, servlet filter, or resource servlet services, the
+	 * value of this service property must be of type {@code String}
 	 * 
+	 * @see #HTTP_WHITEBOARD_CONTEXT_NAME
 	 * @see #HTTP_WHITEBOARD_CONTEXT_SHARED
 	 */
-	public static final String	HTTP_WHITEBOARD_CONTEXT_NAME			= "osgi.http.whiteboard.context.name";
+	public static final String	HTTP_WHITEBOARD_CONTEXT_SELECT			= "osgi.http.whiteboard.context.select";
 
 	/**
-	 * Service property specifying whether an {@link HttpContext} service can be
-	 * used by bundles other than the bundle which registered the Http Context
-	 * service.
+	 * Service property specifying whether an {@link ServletContextHelper} service
+	 * can be used by bundles other than the bundle which registered the Http
+	 * Context service.
 	 * 
 	 * <p>
 	 * By default Http Context services can only be used by the bundle which
@@ -217,8 +238,72 @@ public final class HttpConstants {
 	public static final String	HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED	= "osgi.http.whiteboard.filter.asyncSupported";
 
 	/**
+	 * Service property specifying the dispatcher handling of a {@code Filter}.
+	 * 
+	 * <p>
+	 * By default Filters services are associated with client requests only (see
+	 * value {@link #DISPATCHER_REQUEST}.
+	 * 
+	 * <p>
+	 * The value of this service property must be of type {@code String},
+	 * {@code String[]}, or {@code Collection<String>}. Allowed values are
+	 * {@link #DISPATCHER_ASYNC}, {@link #DISPATCHER_ERROR},
+	 * {@link #DISPATCHER_FORWARD}, {@link #DISPATCHER_INCLUDE},
+	 * {@link #DISPATCHER_REQUEST}.
+	 * 
+	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
+	 */
+	public static final String	HTTP_WHITEBOARD_FILTER_DISPATCHER		= "osgi.http.whiteboard.filter.dispatcher";
+
+	/**
+	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
+	 * property indicating the filter is applied to client requests.
+	 * 
+	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
+	 */
+	public static final String	DISPATCHER_REQUEST						= "REQUEST";
+
+	/**
+	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
+	 * property indicating the filter is applied to include calls to the
+	 * dispatcher.
+	 * 
+	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
+	 */
+	public static final String	DISPATCHER_INCLUDE						= "INCLUDE";
+
+	/**
+	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
+	 * property indicating the filter is applied to forward calls to the
+	 * dispatcher.
+	 * 
+	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
+	 */
+	public static final String	DISPATCHER_FORWARD						= "FORWARD";
+
+	/**
+	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
+	 * property indicating the filter is applied in the async context.
+	 * 
+	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
+	 */
+	public static final String	DISPATCHER_ASYNC						= "ASYNC";
+
+	/**
+	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
+	 * property indicating the filter is applied when an error page is called.
+	 * 
+	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
+	 */
+	public static final String	DISPATCHER_ERROR						= "ERROR";
+
+	/**
 	 * Service property specifying the resource entry prefix for a
-	 * {@link ResourceServlet} servlet service.
+	 * {@link javax.http.Servlet} servlet service.
+	 * 
+	 * <p>
+	 * If a servlet service is registerd with this property, it is marked as a
+	 * resource serving servlet serving bundle resources.
 	 * 
 	 * <p>
 	 * This prefix is used to map a requested resource to the bundle's entries.

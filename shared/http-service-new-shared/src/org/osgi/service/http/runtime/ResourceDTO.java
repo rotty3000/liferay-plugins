@@ -16,26 +16,34 @@
 
 package org.osgi.service.http.runtime;
 
+import org.osgi.dto.DTO;
 import org.osgi.service.http.HttpConstants;
 
 /**
- * Represents a {@code Servlet} service used by the Http Service runtime.
+ * Represents a resource definition used by the Http Service runtime.
  * 
  * @NotThreadSafe
- * @author $Id: e6be7222c490cd3393a160e01a212c616e1eecfd $
+ * @author $Id: e591a1261dfe8a180a601451f6fffce658a98d90 $
  * @since 1.3
  */
-public class ServletDTO extends BaseServletDTO {
+public class ResourceDTO extends DTO {
 	/**
-	 * The request mappings for the servlet.
+	 * The request mappings for the resource
 	 * 
 	 * <p>
 	 * The specified patterns are used to determine whether a request should be
-	 * mapped to the servlet.
+	 * mapped to the resource.
 	 * 
 	 * @see HttpConstants#HTTP_WHITEBOARD_SERVLET_PATTERN
 	 */
 	public String[]				patterns;
+
+	/**
+	 * The prefix of the resource.
+	 * 
+	 * @see HttpConstants#HTTP_WHITEBOARD_RESOURCE_PREFIX
+	 */
+	public String				prefix;
 
 	/**
 	 * Service property identifying the service. In the case of a whiteboard
@@ -47,5 +55,10 @@ public class ServletDTO extends BaseServletDTO {
 	 * value will be less than zero and the Http Service assigns unique negative
 	 * numbers in this case.
 	 */
-	public long		serviceId;
+	public long					serviceId;
+
+	/**
+	 * The service id of the {@code ServletContext} for the resource.
+	 */
+	public long		servletContextId;
 }

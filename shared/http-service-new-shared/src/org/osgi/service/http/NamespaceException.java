@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package org.osgi.service.http;
  * Service. This exception indicates that the requested alias already is in use.
  * 
  * @deprecated As of 1.3.
- * @author $Id: 530aefddf3c4ce91deab454ee8341d4b68305d56 $
+ * @author $Id: 56a4c2a9f5d8e3e144148a423267bf40659a53f2 $
  */
 public class NamespaceException extends Exception {
 	static final long	serialVersionUID	= 7235606031147877747L;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,46 +17,42 @@
 package org.osgi.service.http.runtime;
 
 import org.osgi.dto.DTO;
-import org.osgi.dto.framework.ServiceReferenceDTO;
 import org.osgi.service.http.HttpConstants;
-import org.osgi.service.http.ResourceServlet;
 
 /**
- * Represents a {@link ResourceServlet} servlet service used by the Http Service
- * runtime.
+ * Represents common information about {@code Servlet} a service used by the
+ * Http Service runtime.
  * 
  * @NotThreadSafe
- * @author $Id: 50344e5333633271854796f102773c390a567f87 $
+ * @author $Id: 7b3fa7f19be380699abb6281c0ba8ea1dcb55c31 $
  * @since 1.3
  */
-public class ResourceServletDTO extends DTO {
+public abstract class BaseServletDTO extends DTO {
 	/**
-	 * The name of the resource servlet.
+	 * The name of the servlet.
 	 * 
 	 * @see HttpConstants#HTTP_WHITEBOARD_SERVLET_NAME
 	 */
 	public String				name;
 
 	/**
-	 * The request mappings for the resource servlet.
+	 * The information string from the servlet.
 	 * 
 	 * <p>
-	 * The specified patterns are used to determine whether a request should be
-	 * mapped to the resource servlet.
-	 * 
-	 * @see HttpConstants#HTTP_WHITEBOARD_SERVLET_PATTERN
+	 * This is the value returned by the {@code Servlet.getServletInfo()}
+	 * method.
 	 */
-	public String[]				pattern;
+	public String				servletInfo;
 
 	/**
-	 * The prefix of the resource servlet.
+	 * Specifies whether the servlet supports asynchronous processing.
 	 * 
-	 * @see HttpConstants#HTTP_WHITEBOARD_RESOURCE_PREFIX
+	 * @see HttpConstants#HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED
 	 */
-	public String				prefix;
+	public boolean				asyncSupported;
 
 	/**
-	 * A reference to this service.
+	 * The service id of the {@code ServletContext} for the servlet.
 	 */
-	public ServiceReferenceDTO	serviceReference;
+	public long		servletContextId;
 }

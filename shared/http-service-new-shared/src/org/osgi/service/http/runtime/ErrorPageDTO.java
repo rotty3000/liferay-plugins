@@ -16,21 +16,32 @@
 
 package org.osgi.service.http.runtime;
 
-import org.osgi.dto.DTO;
+import org.osgi.service.http.HttpConstants;
 
 /**
- * Represents a listener service used by the Http Service runtime.
+ * Represents a {@code Servlet} service registered as an error page used by the
+ * Http Service runtime.
  * 
  * @NotThreadSafe
- * @author $Id: 84c639f2fa77fd83edfa24d16a836e195c5122d1 $
+ * @author $Id: ec5feef3bf7f77996b06134bf2b6bef09d835c99 $
  * @since 1.3
  */
-public class ListenerDTO extends DTO {
+public class ErrorPageDTO extends BaseServletDTO {
+	/**
+	 * The exceptions this error page is registered for. This error might be
+	 * empty.
+	 * 
+	 * @see HttpConstants#HTTP_WHITEBOARD_SERVLET_ERROR_PAGE
+	 */
+	public String[]	exceptions;
 
 	/**
-	 * The fully qualified type name the listener.
+	 * The error codes this error page is registered for. This error might be
+	 * empty.
+	 * 
+	 * @see HttpConstants#HTTP_WHITEBOARD_SERVLET_ERROR_PAGE
 	 */
-	public String				type;
+	public long[]	errorCodes;
 
 	/**
 	 * Service property identifying this whiteboard service. This value is 0 or
@@ -38,10 +49,5 @@ public class ListenerDTO extends DTO {
 	 * looked up from the service registry by querying for the service with the
 	 * {@link org.osgi.framework.Constants#SERVICE_ID} set to this value.
 	 */
-	public long					serviceId;
-
-	/**
-	 * The service id of the {@code ServletContext} for the listener.
-	 */
-	public long		servletContextId;
+	public long		serviceId;
 }

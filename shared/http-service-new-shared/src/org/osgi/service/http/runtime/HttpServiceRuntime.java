@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,45 +16,44 @@
 
 package org.osgi.service.http.runtime;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Map;
-
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.service.http.HttpConstants;
 
 /**
  * The {@code HttpServiceRuntime} service represents the runtime information of
  * an Http Service implementation.
- *
+ * 
  * <p>
  * It provides access to the servlet, listener, servlet filter, or resource
  * servlet services used by the Http Service runtime.
- *
+ * 
  * @ThreadSafe
- * @author $Id$
+ * @author $Id: 2d89b84114b8e9f71ec71146a121248a914403e8 $
  * @since 1.3
  */
 @ProviderType
 public interface HttpServiceRuntime {
 	/**
 	 * Returns the attributes of this Http Service runtime.
-	 *
+	 * 
 	 * <p>
 	 * The attributes must always include the
 	 * {@link HttpConstants#HTTP_SERVICE_ENDPOINT_ATTRIBUTE osgi.http.endpoint}
 	 * attribute.
-	 *
+	 * 
 	 * @return The attributes of this Http Service runtime.
 	 */
 	public Map<String, Object> getAttributes();
 
 	/**
-	 * Returns the representations of the {@code HttpContext} services used by
+	 * Returns the representations of the {@code ServletContext} objects used by
 	 * this Http Service runtime.
-	 *
-	 * @return The representations of the http context services used by this
-	 *         Http Service runtime. The returned array will never be empty and
-	 *         will contain at least the default http context.
+	 * 
+	 * @return The representations of the {@code ServletContext} objects used by
+	 *         this Http Service runtime. The returned array may be empty if
+	 *         this Http Service runtime is currently not using any
+	 *         {@code ServletContext} objects.
 	 */
-	public HttpContextDTO[] getHttpContextDTOs();
+	public ServletContextDTO[] getServletContextDTOs();
 }
