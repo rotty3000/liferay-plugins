@@ -1,0 +1,3 @@
+Bundle-Name: OSGi R5 Bridge Packages
+Export-Package: *
+Include-Resource: classes

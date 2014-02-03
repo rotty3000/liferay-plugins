@@ -1,4 +1,0 @@
-Bundle-Name: Minimal Data Transfer Objects API
-Export-Package: org.osgi.dto
-Import-Package: org.osgi.dto;version="[1.0,1.1)",*
-Include-Resource: classes

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="minimal-dto-shared" basedir="." default="compile">
+<project name="osgi-r5-bridge-shared" basedir="." default="compile">
 	<property name="plugin.version" value="1" />
 
 	<import file="../../build-common-osgi-plugin.xml" />
