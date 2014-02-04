@@ -26,7 +26,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -55,6 +54,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.http.HttpConstants;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.http.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.ServletContextDTO;
 
@@ -77,10 +77,10 @@ public class LiferayHttpService extends HttpServlet
 	implements HttpService, HttpServiceRuntime {
 
 	public LiferayHttpService() throws InvalidSyntaxException {
-		_contextMap = new ConcurrentHashMap<HttpContext, HttpServletContext>();
+		_contextMap =
+			new ConcurrentHashMap<ServletContextHelper, HttpServletContext>();
 		_contextNameMap = new ConcurrentHashMap<String, HttpServletContext>();
 		_contextPathMap = new ConcurrentHashMap<String, HttpServletContext>();
-		_contextQueue = new ConcurrentHashMap<HttpContext, Map<?, ?>>();
 		_defaultContextFilter = FrameworkUtil.createFilter(
 			"(&(osgi.http.whiteboard.context.name=default)" +
 				"(provider=Liferay Inc.))");
@@ -99,7 +99,7 @@ public class LiferayHttpService extends HttpServlet
 	@Override
 	@Deprecated
 	public HttpContext createDefaultHttpContext() {
-		return _defaultHttpContext;
+		return (HttpContext)_defaultHttpContext;
 	}
 
 	@Override
@@ -223,7 +223,6 @@ public class LiferayHttpService extends HttpServlet
 		_contextMap.clear();
 		_contextNameMap.clear();
 		_contextPathMap.clear();
-		_contextQueue.clear();
 		_mappings.clear();
 		_serviceRegistrations.clear();
 
@@ -487,19 +486,15 @@ public class LiferayHttpService extends HttpServlet
 		target = "(osgi.http.whiteboard.context.name=*)"
 	)
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	protected void setHttpContext(HttpContext httpContext, Map properties) {
-		if (_contextMap.containsKey(httpContext)) {
-			return;
-		}
+	protected void setServletContextHelper(
+		ServletContextHelper servletContextHelper, Map properties) {
 
-		if (_servletContext.get() == null) {
-			_contextQueue.put(httpContext, properties);
-
+		if (_contextMap.containsKey(servletContextHelper)) {
 			return;
 		}
 
 		HttpServletContext servletContext = new HttpServletContext(
-			_servletContext.get(), httpContext, properties, this);
+			_servletContext.get(), servletContextHelper, properties, this);
 
 		if (_contextNameMap.containsKey(
 				servletContext.getServletContextName()) ||
@@ -509,10 +504,10 @@ public class LiferayHttpService extends HttpServlet
 		}
 
 		if (_defaultContextFilter.matches(properties)) {
-			_defaultHttpContext = httpContext;
+			_defaultHttpContext = servletContextHelper;
 		}
 
-		_contextMap.put(httpContext, servletContext);
+		_contextMap.put(servletContextHelper, servletContext);
 		_contextNameMap.put(
 			servletContext.getServletContextName(), servletContext);
 		_contextPathMap.put(servletContext.getContextPath(), servletContext);
@@ -562,16 +557,6 @@ public class LiferayHttpService extends HttpServlet
 	)
 	protected void setSerlvetContext(ServletContext servletContext) {
 		_servletContext.set(servletContext);
-
-		if (_contextQueue.isEmpty()) {
-			return;
-		}
-
-		for (Entry<HttpContext, Map<?, ?>> entry : _contextQueue.entrySet()) {
-			setHttpContext(entry.getKey(), entry.getValue());
-		}
-
-	_contextQueue.clear();
 	}
 
 	protected boolean targetMatches(Map<String, ?> properties) {
@@ -592,8 +577,11 @@ public class LiferayHttpService extends HttpServlet
 		}
 	}
 
-	protected void unsetHttpContext(HttpContext httpContext) {
-		HttpServletContext servletContext = _contextMap.remove(httpContext);
+	protected void unsetServletContextHelper(
+		ServletContextHelper servletContextHelper) {
+
+		HttpServletContext servletContext = _contextMap.remove(
+			servletContextHelper);
 
 		if (servletContext == null) {
 			return;
@@ -610,11 +598,10 @@ public class LiferayHttpService extends HttpServlet
 	}
 
 	private ComponentContext _componentContext;
-	private Map<HttpContext, HttpServletContext> _contextMap;
+	private Map<ServletContextHelper, HttpServletContext> _contextMap;
 	private Map<String, HttpServletContext> _contextNameMap;
 	private Map<String, HttpServletContext> _contextPathMap;
-	private Map<HttpContext, Map<?, ?>> _contextQueue;
-	private HttpContext _defaultHttpContext;
+	private ServletContextHelper _defaultHttpContext;
 	private Filter _defaultContextFilter;
 	private Map<String, Object> _mappings;
 	private Map<String, ServiceRegistration<?>> _serviceRegistrations;
