@@ -14,8 +14,6 @@
 
 package com.liferay.osgi.service.http.internal;
 
-import com.liferay.osgi.service.http.internal.servlet.DynamicFilterRegistration;
-import com.liferay.osgi.service.http.internal.servlet.DynamicServletRegistration;
 import com.liferay.portal.apache.bridges.struts.LiferayServletContext;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -27,11 +25,11 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.Filter;
@@ -43,7 +41,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 
 import org.osgi.service.http.HttpConstants;
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.ServletContextHelper;
 
 /**
  * @author Raymond Augé
@@ -51,12 +49,13 @@ import org.osgi.service.http.HttpContext;
 public class HttpServletContext extends LiferayServletContext {
 
 	public HttpServletContext(
-		ServletContext parentServletContext, HttpContext httpContext,
+		ServletContext servletContext,
+		ServletContextHelper servletContextHelper,
 		Map<String, Object> properties, LiferayHttpService liferayHttpService) {
 
-		super(parentServletContext);
+		super(servletContext);
 
-		_httpContext = httpContext;
+		_servletContextHelper = servletContextHelper;
 		_properties = properties;
 		_liferayHttpService = liferayHttpService;
 
@@ -64,7 +63,7 @@ public class HttpServletContext extends LiferayServletContext {
 		_contextName = MapUtil.getString(
 			_properties, HttpConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
 
-		String parentContextPath = parentServletContext.getContextPath();
+		String parentContextPath = servletContext.getContextPath();
 
 		_contextPath = parentContextPath + "/o";
 
@@ -74,10 +73,6 @@ public class HttpServletContext extends LiferayServletContext {
 
 		_contextShared = MapUtil.getBoolean(
 			_properties, HttpConstants.HTTP_WHITEBOARD_CONTEXT_SHARED);
-		_filterRegistrations =
-			new ConcurrentHashMap<String, DynamicFilterRegistration>();
-		_servletRegistrations =
-			new ConcurrentHashMap<String, DynamicServletRegistration>();
 	}
 
 	@Override
@@ -91,20 +86,7 @@ public class HttpServletContext extends LiferayServletContext {
 	public javax.servlet.FilterRegistration.Dynamic addFilter(
 		String filterName, Filter filter) {
 
-		DynamicFilterRegistration dynamicFilterRegistration =
-			_filterRegistrations.get(filterName);
-
-		if (dynamicFilterRegistration == null) {
-			dynamicFilterRegistration = new DynamicFilterRegistration(
-				filterName, filter);
-
-			_filterRegistrations.put(filterName, dynamicFilterRegistration);
-		}
-		else if (dynamicFilterRegistration.getClassName() != null) {
-			return null;
-		}
-
-		return dynamicFilterRegistration;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -126,16 +108,7 @@ public class HttpServletContext extends LiferayServletContext {
 
 	@Override
 	public <T extends EventListener> void addListener(T eventListener) {
-		//TODO
-		//ServletContextListener
-		//ServletContextAttributeListener
-		//ServletRequestListener
-		//ServletRequestAttributeListener
-		//HttpSessionListener
-		//HttpSessionAttributeListener
-		//AsyncListener
-
-		//super.addListener(eventListener);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -149,20 +122,7 @@ public class HttpServletContext extends LiferayServletContext {
 	public javax.servlet.ServletRegistration.Dynamic addServlet(
 		String servletName, Servlet servlet) {
 
-		DynamicServletRegistration dynamicServletRegistration =
-			_servletRegistrations.get(servletName);
-
-		if (dynamicServletRegistration == null) {
-			dynamicServletRegistration = new DynamicServletRegistration(
-				servletName, servlet);
-
-			_servletRegistrations.put(servletName, dynamicServletRegistration);
-		}
-		else if (dynamicServletRegistration.getClassName() != null) {
-			return null;
-		}
-
-		return dynamicServletRegistration;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -205,13 +165,9 @@ public class HttpServletContext extends LiferayServletContext {
 
 	@Override
 	public ClassLoader getClassLoader() {
-		if (!_contextShared) {
-			return _httpContext.getClass().getClassLoader();
-		}
+		// TODO
 
-		// TODO do we need an aggregate classLoader here?
-
-		return _httpContext.getClass().getClassLoader();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -225,23 +181,13 @@ public class HttpServletContext extends LiferayServletContext {
 	}
 
 	@Override
-	public int getEffectiveMajorVersion() {
-		return getMajorVersion();
-	}
-
-	@Override
-	public int getEffectiveMinorVersion() {
-		return getMinorVersion();
-	}
-
-	@Override
 	public FilterRegistration getFilterRegistration(String filterName) {
-		return _filterRegistrations.get(filterName);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
-		return _filterRegistrations;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -255,24 +201,19 @@ public class HttpServletContext extends LiferayServletContext {
 	}
 
 	@Override
-	public int getMajorVersion() {
-		return 3;
-	}
-
-	@Override
 	public String getMimeType(String file) {
-		return _httpContext.getMimeType(file);
-	}
-
-	@Override
-	public int getMinorVersion() {
-		return 0;
+		return _servletContextHelper.getMimeType(file);
 	}
 
 	@Override
 	public RequestDispatcher getNamedDispatcher(String name) {
 		//TODO
 		return null;
+	}
+
+	@Override
+	public String getRealPath(String path) {
+		return _servletContextHelper.getRealPath(path);
 	}
 
 	@Override
@@ -283,12 +224,12 @@ public class HttpServletContext extends LiferayServletContext {
 
 	@Override
 	public URL getResource(String path) throws MalformedURLException {
-		return _httpContext.getResource(path);
+		return _servletContextHelper.getResource(path);
 	}
 
 	@Override
 	public InputStream getResourceAsStream(String path) {
-		URL resource = _httpContext.getResource(path);
+		URL resource = _servletContextHelper.getResource(path);
 
 		if (resource == null) {
 			return null;
@@ -302,10 +243,9 @@ public class HttpServletContext extends LiferayServletContext {
 		}
 	}
 
-	@Deprecated
 	@Override
-	public Servlet getServlet(String name) {
-		return null;
+	public Set<String> getResourcePaths(String path) {
+		return _servletContextHelper.getResourcePaths(path);
 	}
 
 	@Override
@@ -313,26 +253,14 @@ public class HttpServletContext extends LiferayServletContext {
 		return _contextName;
 	}
 
-	@Deprecated
-	@Override
-	public Enumeration<String> getServletNames() {
-		return Collections.enumeration(Collections.<String>emptyList());
-	}
-
 	@Override
 	public ServletRegistration getServletRegistration(String servletName) {
-		return _servletRegistrations.get(servletName);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Map<String, ? extends ServletRegistration> getServletRegistrations() {
-		return _servletRegistrations;
-	}
-
-	@Deprecated
-	@Override
-	public Enumeration<Servlet> getServlets() {
-		return Collections.enumeration(Collections.<Servlet>emptyList());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -341,31 +269,7 @@ public class HttpServletContext extends LiferayServletContext {
 	}
 
 	public void removeServlet(Servlet servlet) {
-		Collection<DynamicServletRegistration> values =
-			_servletRegistrations.values();
-
-		DynamicServletRegistration dynamicServletRegistration = null;
-
-		for (DynamicServletRegistration curDynamicServletRegistration : values) {
-			if (curDynamicServletRegistration.getServlet() == servlet) {
-				dynamicServletRegistration = curDynamicServletRegistration;
-
-				break;
-			}
-		}
-
-		if (dynamicServletRegistration == null) {
-			return;
-		}
-
-		_servletRegistrations.remove(dynamicServletRegistration.getName());
-
-		try {
-			servlet.destroy();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -377,11 +281,8 @@ public class HttpServletContext extends LiferayServletContext {
 	private String _contextName;
 	private String _contextPath;
 	private boolean _contextShared = false;
-	private Map<Class<? extends EventListener>, Object> _eventListeners;
-	private Map<String, DynamicFilterRegistration> _filterRegistrations;
-	private HttpContext _httpContext;
 	private LiferayHttpService _liferayHttpService;
 	private Map<String, Object> _properties;
-	private Map<String, DynamicServletRegistration> _servletRegistrations;
+	private ServletContextHelper _servletContextHelper;
 
 }

@@ -27,7 +27,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -56,9 +55,8 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.http.HttpConstants;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.http.ResourceServlet;
-import org.osgi.service.http.runtime.HttpContextDTO;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+import org.osgi.service.http.runtime.ServletContextDTO;
 
 /**
  * @author Raymond Augé
@@ -94,6 +92,7 @@ public class LiferayHttpService extends HttpServlet
 
 	@Override
 	public Map<String, Object> getAttributes() {
+		// TODO
 		return null;
 	}
 
@@ -104,23 +103,24 @@ public class LiferayHttpService extends HttpServlet
 	}
 
 	@Override
-	public HttpContextDTO[] getHttpContextDTOs() {
-		Set<HttpContext> values = _contextMap.keySet();
+	public ServletContextDTO[] getServletContextDTOs() {
+		// TODO
+//		Set<HttpContext> values = _contextMap.keySet();
+//
+//		HttpContext[] httpContexts = values.toArray(
+//			new HttpContext[values.size()]);
+//
+//		HttpContextDTO[] httpContextDTOs = new HttpContextDTO[values.size()];
+//
+//		for (int i = 0; i < values.size(); i++) {
+//			HttpContext httpContext = httpContexts[i];
+//
+//			httpContextDTOs[i] = new HttpContextDTO();
+//
+//			// TODO
+//		}
 
-		HttpContext[] httpContexts = values.toArray(
-			new HttpContext[values.size()]);
-
-		HttpContextDTO[] httpContextDTOs = new HttpContextDTO[values.size()];
-
-		for (int i = 0; i < values.size(); i++) {
-			HttpContext httpContext = httpContexts[i];
-
-			httpContextDTOs[i] = new HttpContextDTO();
-
-			// TODO
-		}
-
-		return httpContextDTOs;
+		return null;
 	}
 
 	@Deprecated
@@ -141,11 +141,12 @@ public class LiferayHttpService extends HttpServlet
 		Hashtable<String,String> properties = new Hashtable<String, String>();
 
 		properties.put(HttpConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, name);
+		properties.put(HttpConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, alias);
 		properties.put(HttpConstants.HTTP_WHITEBOARD_CONTEXT_NAME, contextName);
 
 		ServiceRegistration<Servlet> serviceRegistration =
 			bundleContext.registerService(
-				Servlet.class, new ResourceServlet(), properties);
+				Servlet.class, new HttpServlet() {}, properties);
 
 		_serviceRegistrations.put(alias, serviceRegistration);
 	}
@@ -216,6 +217,15 @@ public class LiferayHttpService extends HttpServlet
 	@Deactivate
 	protected void deactivate() {
 		_mappings.clear();
+
+		_componentContext = null;
+
+		_contextMap.clear();
+		_contextNameMap.clear();
+		_contextPathMap.clear();
+		_contextQueue.clear();
+		_mappings.clear();
+		_serviceRegistrations.clear();
 
 		System.out.println(this + " deactivated!");
 	}
