@@ -14,23 +14,36 @@
 
 package com.liferay.osgi.service.http.internal;
 
+import com.liferay.osgi.service.http.internal.servlet.BundleRequestDispatcher;
+import com.liferay.osgi.service.http.internal.servlet.ServiceComparable;
+import com.liferay.osgi.service.http.internal.servlet.ServiceComparator;
 import com.liferay.portal.apache.bridges.struts.LiferayServletContext;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.util.JS;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.EventListener;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterRegistration;
@@ -39,9 +52,16 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 
-import org.osgi.service.http.HttpConstants;
 import org.osgi.service.http.ServletContextHelper;
+import org.osgi.service.http.runtime.ErrorPageDTO;
+import org.osgi.service.http.runtime.FilterDTO;
+import org.osgi.service.http.runtime.ListenerDTO;
+import org.osgi.service.http.runtime.ResourceDTO;
+import org.osgi.service.http.runtime.ServletContextDTO;
+import org.osgi.service.http.runtime.ServletDTO;
 
 /**
  * @author Raymond Augé
@@ -51,28 +71,30 @@ public class HttpServletContext extends LiferayServletContext {
 	public HttpServletContext(
 		ServletContext servletContext,
 		ServletContextHelper servletContextHelper,
-		Map<String, Object> properties, LiferayHttpService liferayHttpService) {
+		ServletContextHelperProperties schProperties, ClassLoader classLoader,
+		LiferayHttpService liferayHttpService) {
 
 		super(servletContext);
 
 		_servletContextHelper = servletContextHelper;
-		_properties = properties;
+		_schProperties = schProperties;
+		_classLoader = classLoader;
 		_liferayHttpService = liferayHttpService;
 
+		_contextName = _schProperties.getContextName();
+		_contextPath = _schProperties.getContextPath();
+		_shared = _schProperties.getProps().
+			osgi_http_whiteboard_context_shared();
+
 		_attributes = new ConcurrentHashMap<String, Object>();
-		_contextName = MapUtil.getString(
-			_properties, HttpConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
-
-		String parentContextPath = servletContext.getContextPath();
-
-		_contextPath = parentContextPath + "/o";
-
-		if (!_contextName.equals("default")) {
-			_contextPath += StringPool.SLASH + JS.getSafeName(_contextName);
-		}
-
-		_contextShared = MapUtil.getBoolean(
-			_properties, HttpConstants.HTTP_WHITEBOARD_CONTEXT_SHARED);
+		_filterServiceComparables =
+			new ConcurrentSkipListSet<ServiceComparable<Filter>>(
+				new ServiceComparator<Filter>());
+		_servlets = new ConcurrentHashMap<Servlet, ServletDTO>();
+		_servletRequestAttributeListeners =
+			new CopyOnWriteArrayList<ServletRequestAttributeListener>();
+		_servletRequestListeners =
+			new CopyOnWriteArrayList<ServletRequestListener>();
 	}
 
 	@Override
@@ -163,11 +185,13 @@ public class HttpServletContext extends LiferayServletContext {
 		return Collections.enumeration(_attributes.keySet());
 	}
 
+	public Map<String, Object> getAttributes() {
+		return _attributes;
+	}
+
 	@Override
 	public ClassLoader getClassLoader() {
-		// TODO
-
-		throw new UnsupportedOperationException();
+		return _classLoader;
 	}
 
 	@Override
@@ -178,6 +202,10 @@ public class HttpServletContext extends LiferayServletContext {
 	@Override
 	public String getContextPath() {
 		return _contextPath;
+	}
+
+	public Set<ServiceComparable<Filter>> getFilterServiceComparables() {
+		return _filterServiceComparables;
 	}
 
 	@Override
@@ -192,12 +220,25 @@ public class HttpServletContext extends LiferayServletContext {
 
 	@Override
 	public String getInitParameter(String name) {
-		return String.valueOf(_properties.get(name));
+		return String.valueOf(_schProperties.getRawProperties().get(name));
 	}
 
 	@Override
 	public Enumeration<String> getInitParameterNames() {
-		return Collections.enumeration(_properties.keySet());
+		return Collections.enumeration(
+			_schProperties.getRawProperties().keySet());
+	}
+
+	public Map<String, Object> getInitParameters() {
+		return _schProperties.getRawProperties();
+	}
+
+	public long getServiceId() {
+		return _schProperties.getProps().service_id();
+	}
+
+	public ServletContextHelper getServletContextHelper() {
+		return _servletContextHelper;
 	}
 
 	@Override
@@ -207,8 +248,11 @@ public class HttpServletContext extends LiferayServletContext {
 
 	@Override
 	public RequestDispatcher getNamedDispatcher(String name) {
-		//TODO
-		return null;
+		if (Validator.isNull(name)) {
+			return null;
+		}
+
+		return new BundleRequestDispatcher(this, null, null, null, name);
 	}
 
 	@Override
@@ -216,10 +260,41 @@ public class HttpServletContext extends LiferayServletContext {
 		return _servletContextHelper.getRealPath(path);
 	}
 
+	protected boolean isValidPath(String path) {
+		if (!path.startsWith(StringPool.SLASH)) {
+			path = StringPool.SLASH.concat(path);
+		}
+
+		for (String illegalPath : _ILLEGAL_PATHS) {
+			if (path.startsWith(illegalPath)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	@Override
 	public RequestDispatcher getRequestDispatcher(String path) {
-		//TODO
-		return null;
+		if (Validator.isNull(path)) {
+			return null;
+		}
+
+		if (!isValidPath(path)) {
+			return null;
+		}
+
+		try {
+			path = URLDecoder.decode(path, _UTF_8);
+			path = URI.create(path).normalize().getPath();
+		}
+		catch (UnsupportedEncodingException uee) {
+			throw new RuntimeException(uee);
+		}
+
+		String uri = _contextPath.concat(path);
+
+		return new BundleRequestDispatcher(this, uri, path, null, null);
 	}
 
 	@Override
@@ -253,6 +328,20 @@ public class HttpServletContext extends LiferayServletContext {
 		return _contextName;
 	}
 
+	public ConcurrentMap<Servlet, ServletDTO> getServletMap() {
+		return _servlets;
+	}
+
+	public List<ServletRequestAttributeListener>
+		getServletRequestAttributeListeners() {
+
+		return _servletRequestAttributeListeners;
+	}
+
+	public List<ServletRequestListener> getServletRequestListeners() {
+		return _servletRequestListeners;
+	}
+
 	@Override
 	public ServletRegistration getServletRegistration(String servletName) {
 		throw new UnsupportedOperationException();
@@ -261,6 +350,10 @@ public class HttpServletContext extends LiferayServletContext {
 	@Override
 	public Map<String, ? extends ServletRegistration> getServletRegistrations() {
 		throw new UnsupportedOperationException();
+	}
+
+	public boolean isShared() {
+		return _shared;
 	}
 
 	@Override
@@ -277,12 +370,61 @@ public class HttpServletContext extends LiferayServletContext {
 		_attributes.put(name, value);
 	}
 
-	private Map<String, Object> _attributes;
-	private String _contextName;
-	private String _contextPath;
-	private boolean _contextShared = false;
-	private LiferayHttpService _liferayHttpService;
-	private Map<String, Object> _properties;
-	private ServletContextHelper _servletContextHelper;
+	public ServletContextDTO toDTO() {
+		ServletContextDTO contextDTO = new ServletContextDTO();
+
+		contextDTO.attributes = Collections.unmodifiableMap(getAttributes());
+		contextDTO.contextName = getServletContextName();
+		contextDTO.contextPath = getContextPath();
+
+		Map<String, String> initParams = new HashMap<String, String>();
+
+		Iterator<Entry<String, Object>> iterator =
+			getInitParameters().entrySet().iterator();
+
+		while (iterator.hasNext()) {
+			Entry<String, Object> entry = iterator.next();
+
+			initParams.put(entry.getKey(), String.valueOf(entry.getValue()));
+		}
+
+		contextDTO.initParams = initParams;
+		contextDTO.serviceId = getServiceId();
+		contextDTO.shared = isShared();
+
+		Collection<ServletDTO> servletDTOs = getServletMap().values();
+
+		contextDTO.servletDTOs = servletDTOs.toArray(
+			new ServletDTO[servletDTOs.size()]);
+
+		// TODO
+		contextDTO.errorPageDTOs = new ErrorPageDTO[0];
+		contextDTO.filterDTOs = new FilterDTO[0];
+		contextDTO.listenerDTOs = new ListenerDTO[0];
+		contextDTO.names = new String[] {getServletContextName()};
+		contextDTO.resourceDTOs = new ResourceDTO[0];
+
+		return contextDTO;
+	}
+
+	private static final String _UTF_8 = "UTF-8";
+
+	private static final String[] _ILLEGAL_PATHS = new String[] {
+		"/META-INF/", "/OSGI-INF/", "/OSGI-OPT/", "/WEB-INF/"
+	};
+
+	private final Map<String, Object> _attributes;
+	private ClassLoader _classLoader;
+	private final String _contextName;
+	private final String _contextPath;
+	private Set<ServiceComparable<Filter>> _filterServiceComparables;
+	private final LiferayHttpService _liferayHttpService;
+	private final ServletContextHelperProperties _schProperties;
+	private ConcurrentMap<Servlet, ServletDTO> _servlets;
+	private final List<ServletRequestAttributeListener>
+		_servletRequestAttributeListeners;
+	private final List<ServletRequestListener> _servletRequestListeners;
+	private final ServletContextHelper _servletContextHelper;
+	private boolean _shared;
 
 }

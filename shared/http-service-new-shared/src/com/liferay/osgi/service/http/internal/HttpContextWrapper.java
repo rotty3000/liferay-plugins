@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2014 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -14,39 +14,38 @@
 
 package com.liferay.osgi.service.http.internal;
 
-import com.liferay.portal.kernel.util.MimeTypesUtil;
-
 import java.io.IOException;
+
+import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.ServletContextHelper;
 
 /**
  * @author Raymond Augé
  */
-@Component(
-	immediate = true,
-	property = {
-		"provider=Liferay Inc."
-	},
-	service = {
-		DefaultServletContextHelper.class, ServletContextHelper.class
-	}
-)
 @SuppressWarnings("deprecation")
-public class DefaultServletContextHelper extends ServletContextHelper
+public class HttpContextWrapper extends ServletContextHelper
 	implements HttpContext {
+
+	public HttpContextWrapper(HttpContext httpContext, Bundle bundle) {
+		setBundle(bundle);
+
+		_httpContext = httpContext;
+	}
 
 	@Override
 	public String getMimeType(String name) {
-		return MimeTypesUtil.getContentType(name);
+		return _httpContext.getMimeType(name);
+	}
+
+	@Override
+	public URL getResource(String name) {
+		return _httpContext.getResource(name);
 	}
 
 	@Override
@@ -54,19 +53,13 @@ public class DefaultServletContextHelper extends ServletContextHelper
 			HttpServletRequest request, HttpServletResponse response)
 		throws IOException {
 
-		// TODO
-
-		return super.handleSecurity(request, response);
+		return _httpContext.handleSecurity(request, response);
 	}
 
-	@Activate
-	protected void activate(ComponentContext componentContext) {
-		setBundle(componentContext.getBundleContext().getBundle());
+	public HttpContext getHttpContext() {
+		return _httpContext;
 	}
 
-	@Deactivate
-	protected void deactivate() {
-		setBundle(null);
-	}
+	private HttpContext _httpContext;
 
 }

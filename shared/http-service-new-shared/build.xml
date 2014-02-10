@@ -2,7 +2,7 @@
 
 <project name="http-service-new-shared" basedir="." default="compile">
 	<property name="plugin.version" value="1" />
-	<property name="import.shared" value="minimal-dto-shared" />
+	<property name="import.shared" value="osgi-r5-bridge-shared" />
 
 	<import file="../../build-common-osgi-plugin.xml" />
 </project>

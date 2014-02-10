@@ -14,26 +14,27 @@
 
 package com.liferay.osgi.service.http.internal.servlet;
 
+import com.liferay.osgi.service.http.internal.HttpServletContext;
+
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import javax.servlet.FilterConfig;
 
 /**
  * @author Raymond Augé
  * @author Miguel Pastor
  */
-public class ServletConfigImpl implements ServletConfig {
+public class HttpFilterConfig implements FilterConfig {
 
-	public ServletConfigImpl(
-		ServletContext servletContext, String servletName,
+	public HttpFilterConfig(
+		HttpServletContext httpServletContext, String filterName,
 		Map<String, String> initParameters) {
 
-		_servletContext = servletContext;
-		_servletName = servletName;
+		_httpServletContext = httpServletContext;
+		_filterName = filterName;
 		_initParameters = initParameters;
 
 		if (_initParameters == null) {
@@ -42,8 +43,13 @@ public class ServletConfigImpl implements ServletConfig {
 	}
 
 	@Override
-	public String getInitParameter(String name) {
-		return _initParameters.get(name);
+	public String getFilterName() {
+		return _filterName;
+	}
+
+	@Override
+	public String getInitParameter(String parameter) {
+		return _initParameters.get(parameter);
 	}
 
 	@Override
@@ -51,26 +57,13 @@ public class ServletConfigImpl implements ServletConfig {
 		return Collections.enumeration(_initParameters.keySet());
 	}
 
-	public Map<String, String> getInitParameters() {
-		return _initParameters;
-	}
-
 	@Override
-	public ServletContext getServletContext() {
-		return _servletContext;
+	public HttpServletContext getServletContext() {
+		return _httpServletContext;
 	}
 
-	@Override
-	public String getServletName() {
-		return _servletName;
-	}
-
-	public void setInitParameter(String name, String value) {
-		_initParameters.put(name, value);
-	}
-
+	private String _filterName;
 	private Map<String, String> _initParameters;
-	private ServletContext _servletContext;
-	private String _servletName;
+	private HttpServletContext _httpServletContext;
 
 }
