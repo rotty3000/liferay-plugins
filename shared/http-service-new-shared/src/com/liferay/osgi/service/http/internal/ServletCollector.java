@@ -168,6 +168,9 @@ public class ServletCollector {
 
 		errorPageDTO.asyncSupported = servletProperties.getProps().
 			osgi_http_whiteboard_servlet_asyncSupported();
+
+		// TODO
+
 		errorPageDTO.errorCodes = new long[0];
 		errorPageDTO.exceptions = new String[0];
 		errorPageDTO.name = servletProperties.getServletName();

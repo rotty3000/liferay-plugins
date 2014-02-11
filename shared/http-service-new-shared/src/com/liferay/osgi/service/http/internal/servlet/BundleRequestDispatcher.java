@@ -51,33 +51,7 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 		_queryString = queryString;
 		_name = name;
 
-		_badRequest = false;
-		_bundleFilterChain = getFilterChain();
-
-		_bundleFilterChain.setServlet(matchServlet());
-	}
-
-	public void doDispatch(
-			ServletRequest servletRequest, ServletResponse servletResponse)
-		throws IOException, ServletException {
-
-		if (_badRequest) {
-			HttpServletResponse response = (HttpServletResponse)servletResponse;
-
-			response.sendError(
-				HttpServletResponse.SC_NOT_FOUND, _requestURI);
-
-			return;
-		}
-
-		List<ServletRequestListener> servletRequestListeners =
-			_httpServletContext.getServletRequestListeners();
-
-		executePreListeners(servletRequest, servletRequestListeners);
-
-		_bundleFilterChain.doFilter(servletRequest, servletResponse);
-
-		executePostListeners(servletRequest, servletRequestListeners);
+		_bundleFilterChain = buildFilterChain();
 	}
 
 	@Override
@@ -146,6 +120,45 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 		return _servletPath;
 	}
 
+	private BundleFilterChain buildFilterChain() {
+		BundleFilterChain bundleFilterChain = new BundleFilterChain();
+
+		Filter filter;
+
+		for (FilterHolder holder : _httpServletContext.getFilters()) {
+			if ((filter = holder.match(_requestURI, _name)) != null) {
+				bundleFilterChain.addFilter(filter);
+			}
+		}
+
+		bundleFilterChain.setServlet(matchServlet());
+
+		return bundleFilterChain;
+	}
+
+	private void doDispatch(
+			ServletRequest servletRequest, ServletResponse servletResponse)
+		throws IOException, ServletException {
+
+		if (_bundleFilterChain.getServlet() == null) {
+			HttpServletResponse response = (HttpServletResponse)servletResponse;
+
+			response.sendError(
+				HttpServletResponse.SC_NOT_FOUND, _requestURI);
+
+			return;
+		}
+
+		List<ServletRequestListener> servletRequestListeners =
+			_httpServletContext.getServletRequestListeners();
+
+		executePreListeners(servletRequest, servletRequestListeners);
+
+		_bundleFilterChain.doFilter(servletRequest, servletResponse);
+
+		executePostListeners(servletRequest, servletRequestListeners);
+	}
+
 	private void executePostListeners(
 		ServletRequest servletRequest,
 		List<ServletRequestListener> servletRequestListeners) {
@@ -188,26 +201,9 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 			}
 		}
 
-		_badRequest = true;
-
 		return null;
 	}
 
-	private BundleFilterChain getFilterChain() {
-		BundleFilterChain bundleFilterChain = new BundleFilterChain(this);
-
-		Filter filter;
-
-		for (FilterHolder holder : _httpServletContext.getFilters()) {
-			if ((filter = holder.match(_requestURI, _name)) != null) {
-				bundleFilterChain.addFilter(filter);
-			}
-		}
-
-		return bundleFilterChain;
-	}
-
-	private boolean _badRequest;
 	private BundleFilterChain _bundleFilterChain;
 	private final HttpServletContext _httpServletContext;
 	private final String _name;
