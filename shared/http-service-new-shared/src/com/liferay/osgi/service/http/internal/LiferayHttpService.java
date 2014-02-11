@@ -17,26 +17,18 @@ package com.liferay.osgi.service.http.internal;
 import com.liferay.osgi.service.http.internal.servlet.ServletProperties;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -47,8 +39,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.http.HttpConstants;
-import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
@@ -69,20 +59,12 @@ import org.osgi.service.http.runtime.ServletContextDTO;
 )
 @SuppressWarnings("deprecation")
 public class LiferayHttpService extends HttpServlet
-	implements HttpService, HttpServiceRuntime {
+	implements HttpServiceRuntime {
 
 	public LiferayHttpService() throws InvalidSyntaxException {
 		_contextMap = new ConcurrentHashMap<String, HttpServletContext>();
 		_lock = new ReentrantLock(true);
 		_servletContext = new AtomicReference<ServletContext>();
-		_serviceRegistrations =
-			new ConcurrentHashMap<String, ServiceRegistration<?>>();
-	}
-
-	@Deprecated
-	@Override
-	public HttpContext createDefaultHttpContext() {
-		return (HttpContext)_defaultServletContextHelper;
 	}
 
 	@Override
@@ -118,86 +100,6 @@ public class LiferayHttpService extends HttpServlet
 		}
 	}
 
-	@Deprecated
-	@Override
-	public void registerResources(
-		String alias, String name, HttpContext httpContext) {
-
-		if (name == null) {
-			name = "";
-		}
-
-		BundleContext bundleContext = _componentContext.getBundleContext();
-
-		String contextName = identifyContextNameLegacy(
-			bundleContext, httpContext);
-
-		Hashtable<String,String> properties = new Hashtable<String, String>();
-
-		properties.put(HttpConstants.HTTP_WHITEBOARD_CONTEXT_NAME, contextName);
-		properties.put(HttpConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, name);
-		properties.put(HttpConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, alias);
-
-		ServiceRegistration<Servlet> serviceRegistration =
-			bundleContext.registerService(
-				Servlet.class, new HttpServlet() {/**/}, properties);
-
-		_serviceRegistrations.put(alias, serviceRegistration);
-	}
-
-	@Deprecated
-	@Override
-	@SuppressWarnings("rawtypes")
-	public void registerServlet(
-		String alias, Servlet servlet, Dictionary initparams,
-		HttpContext httpContext) {
-
-		BundleContext bundleContext = _componentContext.getBundleContext();
-
-		String contextName = identifyContextNameLegacy(
-			bundleContext, httpContext);
-
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
-
-		properties.put(HttpConstants.HTTP_WHITEBOARD_CONTEXT_NAME, contextName);
-		properties.put(
-			HttpConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED,
-			initparams.get(
-				HttpConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED));
-		properties.put(
-			HttpConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE,
-			initparams.get(
-				HttpConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE));
-		properties.put(
-			HttpConstants.HTTP_WHITEBOARD_SERVLET_NAME,
-			servlet.getClass().getName());
-		properties.put(HttpConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, alias);
-
-		for (Enumeration em = initparams.keys(); em.hasMoreElements();) {
-			String key = String.valueOf(em.nextElement());
-
-			properties.put(key, initparams.get(key));
-		}
-
-		ServiceRegistration<Servlet> serviceRegistration =
-			bundleContext.registerService(Servlet.class, servlet, properties);
-
-		_serviceRegistrations.put(alias, serviceRegistration);
-	}
-
-	@Deprecated
-	@Override
-	public void unregister(String alias) {
-		ServiceRegistration<?> serviceRegistration =
-			_serviceRegistrations.remove(alias);
-
-		if (serviceRegistration == null) {
-			return;
-		}
-
-		serviceRegistration.unregister();
-	}
-
 	@Activate
 	protected void activate(
 			ComponentContext componentContext, Map<String, Object> properties)
@@ -207,6 +109,12 @@ public class LiferayHttpService extends HttpServlet
 
 		try {
 			_componentContext = componentContext;
+
+			_dschProperties = ServletContextHelperProperties.cnv(properties);
+
+			_defaultServletContextHelper = new DefaultServletContextHelper(
+				_componentContext.getBundleContext().getBundle(),
+				_dschProperties.getContextName());
 
 			_httpServiceProperties = HttpServiceProperties.cnv(properties);
 
@@ -234,16 +142,6 @@ public class LiferayHttpService extends HttpServlet
 		_lock.lock();
 
 		try {
-			Iterator<Entry<String, ServiceRegistration<?>>> iterator =
-				_serviceRegistrations.entrySet().iterator();
-
-			while (iterator.hasNext()) {
-				Entry<String, ServiceRegistration<?>> entry = iterator.next();
-
-				entry.getValue().unregister();
-				iterator.remove();
-			}
-
 			_contextMap.clear();
 
 			_componentContext = null;
@@ -262,33 +160,19 @@ public class LiferayHttpService extends HttpServlet
 	}
 
 	protected HttpServletContext getServletContext(
-		ServletProperties properties) {
+		ServletContextHelperProperties properties) {
 
 		String contextName = properties.getContextName();
 
 		return _contextMap.get(_NAME_PREFIX.concat(contextName));
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MANDATORY
-	)
-	protected void setDefaultServletContextHelper(
-		DefaultServletContextHelper defaultServletContextHelper,
-		Map<String, Object> properties) {
+	protected HttpServletContext getServletContext(
+		ServletProperties properties) {
 
-		_lock.lock();
+		String contextName = properties.getContextName();
 
-		try {
-			_dschProperties = ServletContextHelperProperties.cnv(properties);
-
-			_defaultServletContextHelper = defaultServletContextHelper;
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		finally {
-			_lock.unlock();
-		}
+		return _contextMap.get(_NAME_PREFIX.concat(contextName));
 	}
 
 	@Reference(
@@ -355,22 +239,6 @@ public class LiferayHttpService extends HttpServlet
 		}
 	}
 
-	protected void unsetDefaultServletContextHelper(
-		DefaultServletContextHelper defaultServletContextHelper) {
-
-		_lock.lock();
-
-		try {
-			_contextMap.remove(_NAME_PREFIX);
-			_contextMap.remove(_PATH_PREFIX);
-
-			_defaultServletContextHelper = null;
-		}
-		finally {
-			_lock.unlock();
-		}
-	}
-
 	protected void unsetSerlvetContext(ServletContext servletContext) {
 		_lock.lock();
 
@@ -407,52 +275,6 @@ public class LiferayHttpService extends HttpServlet
 		}
 	}
 
-	private String identifyContextNameLegacy(
-		BundleContext bundleContext, HttpContext httpContext) {
-
-		if ((httpContext == null) ||
-			(httpContext instanceof DefaultServletContextHelper)) {
-
-			return "";
-		}
-
-		Bundle bundle = FrameworkUtil.getBundle(httpContext.getClass());
-
-		registerHttpContextLegacy(
-			bundleContext, httpContext, bundle.getSymbolicName());
-
-		return bundle.getSymbolicName();
-	}
-
-	private void registerHttpContextLegacy(
-		BundleContext bundleContext, HttpContext httpContext,
-		String contextName) {
-
-		if (_contextMap.containsKey(_NAME_PREFIX.concat(contextName))) {
-			return;
-		}
-
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
-
-		properties.put(HttpConstants.HTTP_WHITEBOARD_CONTEXT_NAME, contextName);
-		properties.put(
-			HttpConstants.HTTP_WHITEBOARD_CONTEXT_SHARED,
-			Boolean.FALSE.toString());
-
-		if (!(httpContext instanceof ServletContextHelper)) {
-			Bundle bundle = FrameworkUtil.getBundle(httpContext.getClass());
-
-			httpContext = new HttpContextWrapper(httpContext, bundle);
-		}
-
-		String[] classNames = new String[] {
-			HttpContext.class.getName(),
-			ServletContextHelper.class.getName()
-		};
-
-		bundleContext.registerService(classNames, httpContext, properties);
-	}
-
 	private static final String _PATH_PREFIX = "path://";
 	private static final String _NAME_PREFIX = "name://";
 
@@ -462,7 +284,6 @@ public class LiferayHttpService extends HttpServlet
 	private ServletContextHelperProperties _dschProperties;
 	private ReentrantLock _lock;
 	private HttpServiceProperties _httpServiceProperties;
-	private Map<String, ServiceRegistration<?>> _serviceRegistrations;
 	private AtomicReference<ServletContext> _servletContext;
 
 }

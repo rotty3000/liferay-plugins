@@ -20,8 +20,7 @@ import com.liferay.osgi.property.ComponentProps;
 import com.liferay.osgi.property.HttpBaseProperties;
 import com.liferay.osgi.property.ServiceProps;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -110,13 +109,15 @@ public class ServletProperties {
 	public interface Props
 		extends ComponentProps, HttpBaseProperties, ServiceProps {
 
+		public boolean osgi_http_whiteboard_servlet_asyncSupported();
+
+		public List<String> osgi_http_whiteboard_servlet_errorPage();
+
 		public String osgi_http_whiteboard_servlet_name();
 
 		public List<String> osgi_http_whiteboard_servlet_pattern();
 
-		public boolean osgi_http_whiteboard_servlet_asyncSupported();
-
-		public List<String> osgi_http_whiteboard_servlet_errorPage();
+		public String osgi_http_whiteboard_resource_prefix();
 
 	}
 

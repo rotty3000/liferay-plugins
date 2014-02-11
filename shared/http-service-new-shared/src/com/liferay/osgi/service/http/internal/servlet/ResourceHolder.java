@@ -14,41 +14,35 @@
 
 package com.liferay.osgi.service.http.internal.servlet;
 
-import java.util.Comparator;
+import javax.servlet.Servlet;
+
+import org.osgi.service.http.runtime.ResourceDTO;
 
 /**
  * @author Raymond Augé
  */
-public class ServiceComparator<T> implements Comparator<ServiceComparable<T>> {
+public class ResourceHolder extends Holder<Servlet, ResourceDTO> {
+
+	public ResourceHolder(Servlet servlet, ResourceDTO resourceDTO) {
+		super(servlet, resourceDTO);
+	}
 
 	@Override
-	public int compare(
-		ServiceComparable<T> serviceComparable1,
-		ServiceComparable<T> serviceComparable2) {
+	public void destroy() {
+		t.destroy();
+	}
 
-		if (serviceComparable1.getServiceRanking() <
-				serviceComparable2.getServiceRanking()) {
+	@Override
+	public Servlet match(String requestURI, String name) {
+		String[] patterns = d.patterns;
 
-			return -1;
-		}
-		else if (serviceComparable1.getServiceRanking() >
-					serviceComparable2.getServiceRanking()) {
-
-			return 1;
-		}
-
-		if (serviceComparable1.getServiceId() <
-				serviceComparable2.getServiceId()) {
-
-			return -1;
-		}
-		else if (serviceComparable1.getServiceId() >
-					serviceComparable2.getServiceId()) {
-
-			return 1;
+		for (String pattern : patterns) {
+			if ((pattern != null) && match(pattern, requestURI, true)) {
+				return t;
+			}
 		}
 
-		return 0;
+		return null;
 	}
 
 }

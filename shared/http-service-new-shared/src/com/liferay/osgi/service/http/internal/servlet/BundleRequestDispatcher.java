@@ -16,12 +16,10 @@ package com.liferay.osgi.service.http.internal.servlet;
 
 import com.liferay.osgi.service.http.internal.HttpServletContext;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.util.ClassLoaderUtil;
 
 import java.io.IOException;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.Filter;
@@ -35,7 +33,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.http.runtime.ServletDTO;
+import org.osgi.dto.DTO;
 
 /**
  * @author Raymond Augé
@@ -53,16 +51,10 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 		_queryString = queryString;
 		_name = name;
 
-		if (_name != null) {
-			_bundleFilterChain = getFilterChain();
-		}
-		else {
-			_bundleFilterChain = getFilterChain();
-		}
-
 		_badRequest = false;
+		_bundleFilterChain = getFilterChain();
 
-		_bundleFilterChain.setServlet(findTarget());
+		_bundleFilterChain.setServlet(matchServlet());
 	}
 
 	public void doDispatch(
@@ -78,43 +70,14 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 			return;
 		}
 
-		ClassLoader contextClassLoader =
-			ClassLoaderUtil.getContextClassLoader();
+		List<ServletRequestListener> servletRequestListeners =
+			_httpServletContext.getServletRequestListeners();
 
-		try {
-			ClassLoader pluginClassLoader =
-				_httpServletContext.getClassLoader();
+		executePreListeners(servletRequest, servletRequestListeners);
 
-			ClassLoaderUtil.setContextClassLoader(pluginClassLoader);
+		_bundleFilterChain.doFilter(servletRequest, servletResponse);
 
-			List<ServletRequestListener> servletRequestListeners =
-				_httpServletContext.getServletRequestListeners();
-
-			for (ServletRequestListener servletRequestListener :
-					servletRequestListeners) {
-
-				ServletRequestEvent servletRequestEvent =
-					new ServletRequestEvent(
-						_httpServletContext, servletRequest);
-
-				servletRequestListener.requestInitialized(servletRequestEvent);
-			}
-
-			_bundleFilterChain.doFilter(servletRequest, servletResponse);
-
-			for (ServletRequestListener servletRequestListener :
-					servletRequestListeners) {
-
-				ServletRequestEvent servletRequestEvent =
-					new ServletRequestEvent(
-						_httpServletContext, servletRequest);
-
-				servletRequestListener.requestDestroyed(servletRequestEvent);
-			}
-		}
-		finally {
-			ClassLoaderUtil.setContextClassLoader(contextClassLoader);
-		}
+		executePostListeners(servletRequest, servletRequestListeners);
 	}
 
 	@Override
@@ -183,25 +146,45 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 		return _servletPath;
 	}
 
-	private Servlet findTarget() {
-		ConcurrentMap<Servlet, ServletDTO> servletMap =
+	private void executePostListeners(
+		ServletRequest servletRequest,
+		List<ServletRequestListener> servletRequestListeners) {
+
+		for (ServletRequestListener servletRequestListener :
+				servletRequestListeners) {
+
+			ServletRequestEvent servletRequestEvent =
+				new ServletRequestEvent(
+					_httpServletContext, servletRequest);
+
+			servletRequestListener.requestDestroyed(servletRequestEvent);
+		}
+	}
+
+	private void executePreListeners(
+		ServletRequest servletRequest,
+		List<ServletRequestListener> servletRequestListeners) {
+
+		for (ServletRequestListener servletRequestListener :
+				servletRequestListeners) {
+
+			ServletRequestEvent servletRequestEvent =
+				new ServletRequestEvent(
+					_httpServletContext, servletRequest);
+
+			servletRequestListener.requestInitialized(servletRequestEvent);
+		}
+	}
+
+	private Servlet matchServlet() {
+		ConcurrentMap<Servlet, Holder<Servlet, ? extends DTO>> servletMap =
 			_httpServletContext.getServletMap();
 
-		for (Map.Entry<Servlet, ServletDTO> entry : servletMap.entrySet()) {
-			if (_name != null) {
-				if (entry.getValue().name.equals(_name)) {
-					return entry.getKey();
-				}
+		Servlet servlet;
 
-				continue;
-			}
-
-			String[] patterns = entry.getValue().patterns;
-
-			for (String pattern : patterns) {
-				if ((pattern != null) && match(pattern, _requestURI, true)) {
-					return entry.getKey();
-				}
+		for (Holder<Servlet, ? extends DTO> holder : servletMap.values()) {
+			if ((servlet = holder.match(_requestURI, _name)) != null) {
+				return servlet;
 			}
 		}
 
@@ -211,64 +194,17 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 	}
 
 	private BundleFilterChain getFilterChain() {
-		BundleFilterChain bundleFilterChain = new BundleFilterChain();
+		BundleFilterChain bundleFilterChain = new BundleFilterChain(this);
 
-		for (ServiceComparable<Filter> serviceComparable :
-				_httpServletContext.getFilterServiceComparables()) {
+		Filter filter;
 
-			if (_name != null) {
-				if (serviceComparable.getName().equals(_name)) {
-					bundleFilterChain.addFilter(serviceComparable.getT());
-				}
-
-				continue;
-			}
-
-			List<String> patterns = serviceComparable.getMappings();
-
-			for (String pattern : patterns) {
-				if ((pattern != null) && match(pattern, _requestURI, true)) {
-					bundleFilterChain.addFilter(serviceComparable.getT());
-				}
+		for (FilterHolder holder : _httpServletContext.getFilters()) {
+			if ((filter = holder.match(_requestURI, _name)) != null) {
+				bundleFilterChain.addFilter(filter);
 			}
 		}
 
 		return bundleFilterChain;
-	}
-
-	private boolean isPathWildcardMatch(String pattern, String path) {
-		int cpl = pattern.length() - 2;
-
-		if (pattern.endsWith("/*") && path.regionMatches(0, pattern, 0, cpl)) {
-			if (path.length() == cpl || '/' == path.charAt(cpl)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private boolean match(String pattern, String path, boolean noDefault)
-		throws IllegalArgumentException {
-
-		char firstChar = pattern.charAt(0);
-
-		if (firstChar == '/') {
-			if (!noDefault && (pattern.length() == 1) || pattern.equals(path)) {
-				return true;
-			}
-
-			if(isPathWildcardMatch(pattern, path)) {
-				return true;
-			}
-		}
-		else if (firstChar == '*') {
-			return path.regionMatches(
-				path.length() - pattern.length() + 1,
-				pattern, 1, pattern.length() - 1);
-		}
-
-		return false;
 	}
 
 	private boolean _badRequest;
@@ -279,7 +215,6 @@ public class BundleRequestDispatcher implements RequestDispatcher {
 	private String _pathInfo;
 	private final String _queryString;
 	private final String _requestURI;
-	private String _servletMapping;
 	private String _servletPath;
 
 }

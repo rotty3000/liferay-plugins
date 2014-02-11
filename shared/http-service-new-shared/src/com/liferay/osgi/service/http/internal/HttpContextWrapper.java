@@ -18,10 +18,11 @@ import java.io.IOException;
 
 import java.net.URL;
 
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.ServletContextHelper;
 
@@ -30,12 +31,24 @@ import org.osgi.service.http.ServletContextHelper;
  */
 @SuppressWarnings("deprecation")
 public class HttpContextWrapper extends ServletContextHelper
-	implements HttpContext {
+	implements HttpContextNameAware {
 
-	public HttpContextWrapper(HttpContext httpContext, Bundle bundle) {
-		setBundle(bundle);
+	public HttpContextWrapper(
+		HttpContext httpContext, ServletContextHelper servletContextHelper,
+		String contextName) {
 
 		_httpContext = httpContext;
+		_servletContextHelper = servletContextHelper;
+		_contextName = contextName;
+	}
+
+	@Override
+	public String getContextName() {
+		return _contextName;
+	}
+
+	public HttpContext getHttpContext() {
+		return _httpContext;
 	}
 
 	@Override
@@ -44,8 +57,18 @@ public class HttpContextWrapper extends ServletContextHelper
 	}
 
 	@Override
+	public String getRealPath(String path) {
+		return _servletContextHelper.getRealPath(path);
+	}
+
+	@Override
 	public URL getResource(String name) {
 		return _httpContext.getResource(name);
+	}
+
+	@Override
+	public Set<String> getResourcePaths(String path) {
+		return _servletContextHelper.getResourcePaths(path);
 	}
 
 	@Override
@@ -56,10 +79,8 @@ public class HttpContextWrapper extends ServletContextHelper
 		return _httpContext.handleSecurity(request, response);
 	}
 
-	public HttpContext getHttpContext() {
-		return _httpContext;
-	}
-
-	private HttpContext _httpContext;
+	private final String _contextName;
+	private final HttpContext _httpContext;
+	private final ServletContextHelper _servletContextHelper;
 
 }

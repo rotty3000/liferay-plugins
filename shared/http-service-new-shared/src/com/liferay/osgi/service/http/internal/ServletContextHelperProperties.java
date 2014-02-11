@@ -19,8 +19,7 @@ import aQute.lib.converter.Converter;
 import com.liferay.osgi.property.ComponentProps;
 import com.liferay.osgi.property.ServiceProps;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

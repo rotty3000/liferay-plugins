@@ -21,28 +21,26 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.http.HttpContext;
+import org.osgi.framework.Bundle;
 import org.osgi.service.http.ServletContextHelper;
 
 /**
  * @author Raymond Augé
  */
-@Component(
-	immediate = true,
-	property = {
-		"provider=Liferay Inc."
-	},
-	service = {
-		DefaultServletContextHelper.class, ServletContextHelper.class
-	}
-)
 @SuppressWarnings("deprecation")
 public class DefaultServletContextHelper extends ServletContextHelper
-	implements HttpContext {
+	implements HttpContextNameAware {
+
+	public DefaultServletContextHelper(Bundle bundle, String contextName) {
+		setBundle(bundle);
+
+		_contextName = contextName;
+	}
+
+	@Override
+	public String getContextName() {
+		return _contextName;
+	}
 
 	@Override
 	public String getMimeType(String name) {
@@ -59,14 +57,6 @@ public class DefaultServletContextHelper extends ServletContextHelper
 		return super.handleSecurity(request, response);
 	}
 
-	@Activate
-	protected void activate(ComponentContext componentContext) {
-		setBundle(componentContext.getBundleContext().getBundle());
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		setBundle(null);
-	}
+	private final String _contextName;
 
 }

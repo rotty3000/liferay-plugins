@@ -36,6 +36,10 @@ import org.osgi.service.http.ServletContextHelper;
  */
 public class BundleFilterChain implements FilterChain {
 
+	public BundleFilterChain(BundleRequestDispatcher bundleRequestDispatcher) {
+		_bundleRequestDispatcher = bundleRequestDispatcher;
+	}
+
 	public void addFilter(Filter filter) {
 		_filters.add(filter);
 	}
@@ -63,11 +67,10 @@ public class BundleFilterChain implements FilterChain {
 			}
 
 			_servlet.service(servletRequest, servletResponse);
-
-			return;
 		}
-
-		filter.doFilter(servletRequest, servletResponse, this);
+		else {
+			filter.doFilter(servletRequest, servletResponse, this);
+		}
 	}
 
 	public void setServlet(Servlet servlet) {
@@ -82,7 +85,8 @@ public class BundleFilterChain implements FilterChain {
 		return httpServletConfig.getServletContext().getServletContextHelper();
 	}
 
-	private Queue<Filter> _filters = new LinkedList<Filter>();
+	private final BundleRequestDispatcher _bundleRequestDispatcher;
+	private final Queue<Filter> _filters = new LinkedList<Filter>();
 	private Servlet _servlet;
 
 }

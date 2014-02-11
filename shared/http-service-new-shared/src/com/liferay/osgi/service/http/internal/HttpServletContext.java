@@ -15,8 +15,9 @@
 package com.liferay.osgi.service.http.internal;
 
 import com.liferay.osgi.service.http.internal.servlet.BundleRequestDispatcher;
-import com.liferay.osgi.service.http.internal.servlet.ServiceComparable;
-import com.liferay.osgi.service.http.internal.servlet.ServiceComparator;
+import com.liferay.osgi.service.http.internal.servlet.FilterHolder;
+import com.liferay.osgi.service.http.internal.servlet.FilterHolderComparator;
+import com.liferay.osgi.service.http.internal.servlet.Holder;
 import com.liferay.portal.apache.bridges.struts.LiferayServletContext;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -35,6 +36,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,7 @@ import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
 
+import org.osgi.dto.DTO;
 import org.osgi.service.http.ServletContextHelper;
 import org.osgi.service.http.runtime.ErrorPageDTO;
 import org.osgi.service.http.runtime.FilterDTO;
@@ -87,10 +90,10 @@ public class HttpServletContext extends LiferayServletContext {
 			osgi_http_whiteboard_context_shared();
 
 		_attributes = new ConcurrentHashMap<String, Object>();
-		_filterServiceComparables =
-			new ConcurrentSkipListSet<ServiceComparable<Filter>>(
-				new ServiceComparator<Filter>());
-		_servlets = new ConcurrentHashMap<Servlet, ServletDTO>();
+		_filters = new ConcurrentSkipListSet<FilterHolder>(
+			new FilterHolderComparator());
+		_servlets =
+			new ConcurrentHashMap<Servlet, Holder<Servlet, ? extends DTO>>();
 		_servletRequestAttributeListeners =
 			new CopyOnWriteArrayList<ServletRequestAttributeListener>();
 		_servletRequestListeners =
@@ -204,8 +207,8 @@ public class HttpServletContext extends LiferayServletContext {
 		return _contextPath;
 	}
 
-	public Set<ServiceComparable<Filter>> getFilterServiceComparables() {
-		return _filterServiceComparables;
+	public Set<FilterHolder> getFilters() {
+		return _filters;
 	}
 
 	@Override
@@ -328,7 +331,9 @@ public class HttpServletContext extends LiferayServletContext {
 		return _contextName;
 	}
 
-	public ConcurrentMap<Servlet, ServletDTO> getServletMap() {
+	public ConcurrentMap<Servlet, Holder<Servlet, ? extends DTO>>
+		getServletMap() {
+
 		return _servlets;
 	}
 
@@ -388,21 +393,47 @@ public class HttpServletContext extends LiferayServletContext {
 			initParams.put(entry.getKey(), String.valueOf(entry.getValue()));
 		}
 
-		contextDTO.initParams = initParams;
+		contextDTO.initParams = Collections.unmodifiableMap(initParams);
 		contextDTO.serviceId = getServiceId();
 		contextDTO.shared = isShared();
 
-		Collection<ServletDTO> servletDTOs = getServletMap().values();
+		Set<ErrorPageDTO> errorPageDTOs = new HashSet<ErrorPageDTO>();
+		Set<ResourceDTO> resourceDTOs = new HashSet<ResourceDTO>();
+		Set<ServletDTO> servletDTOs = new HashSet<ServletDTO>();
 
+		Collection<Holder<Servlet, ? extends DTO>> holders =
+			getServletMap().values();
+
+		for (Holder<Servlet, ? extends DTO> holder : holders) {
+			if (holder.d instanceof ErrorPageDTO) {
+				errorPageDTOs.add((ErrorPageDTO)holder.d);
+			}
+			else if (holder.d instanceof ResourceDTO) {
+				resourceDTOs.add((ResourceDTO)holder.d);
+			}
+			else if (holder.d instanceof ServletDTO) {
+				servletDTOs.add((ServletDTO)holder.d);
+			}
+		}
+
+		contextDTO.errorPageDTOs = errorPageDTOs.toArray(
+			new ErrorPageDTO[errorPageDTOs.size()]);
+		contextDTO.resourceDTOs = resourceDTOs.toArray(
+			new ResourceDTO[resourceDTOs.size()]);
 		contextDTO.servletDTOs = servletDTOs.toArray(
 			new ServletDTO[servletDTOs.size()]);
 
+		Set<String> names = new HashSet<String>();
+
+		names.add(_schProperties.getContextName());
+		names.addAll(
+			_schProperties.getProps().osgi_http_whiteboard_context_name());
+
+		contextDTO.names = names.toArray(new String[names.size()]);
+
 		// TODO
-		contextDTO.errorPageDTOs = new ErrorPageDTO[0];
 		contextDTO.filterDTOs = new FilterDTO[0];
 		contextDTO.listenerDTOs = new ListenerDTO[0];
-		contextDTO.names = new String[] {getServletContextName()};
-		contextDTO.resourceDTOs = new ResourceDTO[0];
 
 		return contextDTO;
 	}
@@ -417,10 +448,10 @@ public class HttpServletContext extends LiferayServletContext {
 	private ClassLoader _classLoader;
 	private final String _contextName;
 	private final String _contextPath;
-	private Set<ServiceComparable<Filter>> _filterServiceComparables;
+	private Set<FilterHolder> _filters;
 	private final LiferayHttpService _liferayHttpService;
 	private final ServletContextHelperProperties _schProperties;
-	private ConcurrentMap<Servlet, ServletDTO> _servlets;
+	private ConcurrentMap<Servlet, Holder<Servlet, ? extends DTO>> _servlets;
 	private final List<ServletRequestAttributeListener>
 		_servletRequestAttributeListeners;
 	private final List<ServletRequestListener> _servletRequestListeners;
