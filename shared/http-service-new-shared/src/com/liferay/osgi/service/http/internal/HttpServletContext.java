@@ -31,6 +31,9 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import java.security.AccessControlContext;
+import java.security.AccessController;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -89,6 +92,7 @@ public class HttpServletContext extends LiferayServletContext {
 		_shared = _schProperties.getProps().
 			osgi_http_whiteboard_context_shared();
 
+		_accessControlContext = AccessController.getContext();
 		_attributes = new ConcurrentHashMap<String, Object>();
 		_filters = new ConcurrentSkipListSet<FilterHolder>(
 			new FilterHolderComparator());
@@ -176,6 +180,10 @@ public class HttpServletContext extends LiferayServletContext {
 		throws ServletException {
 
 		throw new UnsupportedOperationException();
+	}
+
+	public AccessControlContext getAccessControlContext() {
+		return _accessControlContext;
 	}
 
 	@Override
@@ -444,6 +452,7 @@ public class HttpServletContext extends LiferayServletContext {
 		"/META-INF/", "/OSGI-INF/", "/OSGI-OPT/", "/WEB-INF/"
 	};
 
+	private final AccessControlContext _accessControlContext;
 	private final Map<String, Object> _attributes;
 	private ClassLoader _classLoader;
 	private final String _contextName;
