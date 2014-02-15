@@ -16,9 +16,12 @@ package com.liferay.sample.portlet.filter;
 
 import java.io.IOException;
 
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+import javax.portlet.filter.ActionFilter;
 import javax.portlet.filter.FilterChain;
 import javax.portlet.filter.FilterConfig;
 import javax.portlet.filter.RenderFilter;
@@ -33,10 +36,10 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(
 	immediate = true,
 	property = {
-		"portlet.id=58"
+		"javax.portlet.name=58"
 	}
 )
-public class RenderFilter_One implements RenderFilter {
+public class RenderFilter_One implements ActionFilter, RenderFilter {
 
 	public void destroy() {
 		System.out.println(toString() + " in destroy!");
@@ -46,13 +49,27 @@ public class RenderFilter_One implements RenderFilter {
 		System.out.println(toString() + " in init!");
 	}
 
+	@Override
+	public void doFilter(
+			ActionRequest actionRequest, ActionResponse actionResponse,
+			FilterChain filterChain)
+		throws IOException, PortletException {
+
+		System.out.println(
+			toString() + " filtering action for " +
+				actionResponse.getNamespace());
+
+		filterChain.doFilter(actionRequest, actionResponse);
+	}
+
 	public void doFilter(
 			RenderRequest renderRequest, RenderResponse renderResponse,
 			FilterChain filterChain)
 		throws IOException, PortletException {
 
 		System.out.println(
-			toString() + " filtering " + renderResponse.getNamespace());
+			toString() + " filtering render for " +
+				renderResponse.getNamespace());
 
 		filterChain.doFilter(renderRequest, renderResponse);
 	}
