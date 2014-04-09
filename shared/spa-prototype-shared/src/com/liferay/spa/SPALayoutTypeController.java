@@ -14,18 +14,22 @@
 
 package com.liferay.spa;
 
-import com.liferay.portal.kernel.struts.BaseStrutsAction;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.model.LayoutTypeFactory;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.model.Layout;
+import com.liferay.portal.model.LayoutTypeController;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.LayoutTypeWrapper;
 import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portal.util.LayoutTypeControllerHelper;
 
 import java.io.PrintWriter;
 
 import java.util.Map;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -44,10 +48,9 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"layout.type=spa"
 	},
-	service = LayoutTypeFactory.class
+	service = LayoutTypeController.class
 )
-public class SPALayoutTypeFactory extends BaseStrutsAction
-	implements LayoutTypeFactory {
+public class SPALayoutTypeController implements LayoutTypeController {
 
 	@Override
 	public String[] getConfigurationActionDelete() {
@@ -62,6 +65,13 @@ public class SPALayoutTypeFactory extends BaseStrutsAction
 	@Override
 	public String getEditPage() {
 		return _servletContext.getContextPath() + "/spa/conf/edit";
+	}
+
+	@Override
+	public LayoutTypeWrapper getLayoutTypeWrapper(
+		LayoutTypePortlet layoutTypePortlet) {
+
+		return new SPALayoutTypeWrapper(layoutTypePortlet, this);
 	}
 
 	@Override
@@ -87,11 +97,6 @@ public class SPALayoutTypeFactory extends BaseStrutsAction
 	}
 
 	@Override
-	public boolean isExclusive() {
-		return true;
-	}
-
-	@Override
 	public boolean isFirstPageable() {
 		return true;
 	}
@@ -112,24 +117,10 @@ public class SPALayoutTypeFactory extends BaseStrutsAction
 	}
 
 	@Override
-	public LayoutTypeWrapper getLayoutTypeWrapper(
-		LayoutTypePortlet layoutTypePortlet) {
+	public boolean matches(
+		Layout layout, String friendlyURL, String queryString) {
 
-		return new SPALayoutTypeWrapper(layoutTypePortlet, this);
-	}
-
-	@Override
-	public String execute(
-			HttpServletRequest request, HttpServletResponse response)
-		throws Exception {
-
-		String pathInfo = request.getPathInfo();
-
-		PrintWriter writer = response.getWriter();
-
-		writer.print("PathInfo: " + pathInfo);
-
-		return null;
+		return true;
 	}
 
 	@Activate
@@ -148,6 +139,7 @@ public class SPALayoutTypeFactory extends BaseStrutsAction
 	}
 
 	private static final String[] _EMPTY_ARRAY = new String[0];
+
 	private static final String _URL =
 		"${liferay:mainPath}/portal/layout?p_l_id=${liferay:plid}&" +
 			"p_v_l_s_g_id=${liferay:pvlsgid}";
@@ -158,16 +150,47 @@ public class SPALayoutTypeFactory extends BaseStrutsAction
 
 		public SPALayoutTypeWrapper(
 			LayoutTypePortlet layoutTypePortlet,
-			LayoutTypeFactory layoutTypeFactory) {
+			LayoutTypeController layoutTypeFactory) {
 
 			super(layoutTypePortlet, layoutTypeFactory);
 		}
 
 		@Override
-		public void includeLayoutContent(
+		public boolean includeLayoutContent(
 				HttpServletRequest request, HttpServletResponse response,
 				ThemeDisplay themeDisplay, String portletId)
 			throws Exception {
+
+			String requestURI = request.getRequestURI();
+			String queryString = request.getQueryString();
+
+			// We'll typically have been forwarded, so replace the
+
+			String forwardRequestURI = (String)request.getAttribute(
+				RequestDispatcher.FORWARD_REQUEST_URI);
+
+			if (forwardRequestURI != null) {
+				requestURI = forwardRequestURI;
+
+				String forwardQueryString = (String)request.getAttribute(
+					RequestDispatcher.FORWARD_QUERY_STRING);
+
+				queryString = forwardQueryString;
+			}
+
+			String ppid = ParamUtil.getString(request, "p_p_id");
+
+			if (Validator.isNotNull(ppid)) {
+				LayoutTypeController layoutTypeFactory =
+					LayoutTypeControllerHelper.getLayoutTypeFactory("portlet");
+
+				LayoutTypeWrapper layoutTypeWrapper =
+					layoutTypeFactory.getLayoutTypeWrapper(
+						(LayoutTypePortlet)getWrappedLayoutType());
+
+				return layoutTypeWrapper.includeLayoutContent(
+					request, response, themeDisplay, ppid);
+			}
 
 			response.setContentType("text/plain");
 
@@ -175,9 +198,11 @@ public class SPALayoutTypeFactory extends BaseStrutsAction
 
 			PrintWriter printWriter = new PrintWriter(outputStream);
 
-			printWriter.print("Hello World! " + request.getRequestURI());
+			printWriter.print("Hello World! " + requestURI + "?" + queryString);
 
 			printWriter.close();
+
+			return true;
 		}
 
 	}
