@@ -79,15 +79,10 @@ public class SPALayoutTypeController implements LayoutTypeController {
 			ThemeDisplay themeDisplay, String portletId)
 		throws Exception {
 
-		Layout layout = themeDisplay.getLayout();
-
-		LayoutTypeWrapper layoutTypeWrapper =
-			(LayoutTypeWrapper)layout.getLayoutType();
-
 		String requestURI = request.getRequestURI();
 		String queryString = request.getQueryString();
 
-		// We'll typically have been forwarded, so replace the
+		// We'll always have been forwarded
 
 		String forwardRequestURI = (String)request.getAttribute(
 			RequestDispatcher.FORWARD_REQUEST_URI);
@@ -101,9 +96,20 @@ public class SPALayoutTypeController implements LayoutTypeController {
 			queryString = forwardQueryString;
 		}
 
+		// If this is a portlet request, let it be handled natively so we can do
+		// basic things like login. This could get more advanced if needed. For
+		// instance, login is always maximized, but we're not checking it here.
+		// We might only do this if MAXIMIZED or some other state. However,
+		// the framework controller could implement it's own portlet rendering.
+
 		String ppid = ParamUtil.getString(request, "p_p_id");
 
 		if (Validator.isNotNull(ppid)) {
+			Layout layout = themeDisplay.getLayout();
+
+			LayoutTypeWrapper layoutTypeWrapper =
+				(LayoutTypeWrapper)layout.getLayoutType();
+
 			LayoutTypeController layoutTypeFactory =
 				LayoutTypeControllerHelper.getLayoutTypeFactory("portlet");
 
@@ -114,15 +120,23 @@ public class SPALayoutTypeController implements LayoutTypeController {
 				request, response, themeDisplay, ppid);
 		}
 
+		// This is where the business logic of the framework controller would
+		// start.
+
 		response.setContentType("text/plain");
 
 		ServletOutputStream outputStream = response.getOutputStream();
 
 		PrintWriter printWriter = new PrintWriter(outputStream);
 
-		printWriter.print("Hello World! " + requestURI + ((queryString != null) ? "?" + queryString : ""));
+		printWriter.print(
+			"Hello World! " + requestURI +
+				((queryString != null) ? "?" + queryString : ""));
 
 		printWriter.close();
+
+		// Return true if we don't want to get wrapped by the portal
+		// decorations, include anything that is not HTML.
 
 		return true;
 	}
