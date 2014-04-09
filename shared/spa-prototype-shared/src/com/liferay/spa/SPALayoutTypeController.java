@@ -14,7 +14,6 @@
 
 package com.liferay.spa;
 
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutTypeController;
@@ -56,6 +55,16 @@ public class SPALayoutTypeController implements LayoutTypeController {
 		return _EMPTY_ARRAY;
 	}
 
+	/**
+	 * You only need this to return a value if there is a configuration UI
+	 * component to this controller.
+	 *
+	 * The portal has to be able to perform a dispatch to this url. In order to
+	 * be able to provide such a UI, the implemetor would have to provide a
+	 * servlet which can handle the dispatch.
+	 *
+	 * @return the path to a resource for the edit layout UI
+	 */
 	@Override
 	public String getEditPage() {
 		return null;
@@ -73,6 +82,16 @@ public class SPALayoutTypeController implements LayoutTypeController {
 		return null;
 	}
 
+	/**
+	 * Generate the content of the type.
+	 *
+	 * @param request the {@link HttpServletRequest}
+	 * @param response the {@link HttpServletRequest}
+	 * @param themeDisplay the {@link ThemeDisplay}
+	 * @param portletId the portlet id
+	 * @return true if the result should be wrapped by the portal decorations
+	 *         (only valid if the return type is text/html
+	 */
 	@Override
 	public boolean includeLayoutContent(
 			HttpServletRequest request, HttpServletResponse response,
@@ -102,22 +121,8 @@ public class SPALayoutTypeController implements LayoutTypeController {
 		// We might only do this if MAXIMIZED or some other state. However,
 		// the framework controller could implement it's own portlet rendering.
 
-		String ppid = ParamUtil.getString(request, "p_p_id");
-
-		if (Validator.isNotNull(ppid)) {
-			Layout layout = themeDisplay.getLayout();
-
-			LayoutTypeWrapper layoutTypeWrapper =
-				(LayoutTypeWrapper)layout.getLayoutType();
-
-			LayoutTypeController layoutTypeFactory =
-				LayoutTypeControllerHelper.getLayoutTypeFactory("portlet");
-
-			layoutTypeWrapper = layoutTypeFactory.getLayoutTypeWrapper(
-				(LayoutTypePortlet)layoutTypeWrapper.getWrappedLayoutType());
-
-			return layoutTypeWrapper.includeLayoutContent(
-				request, response, themeDisplay, ppid);
+		if (Validator.isNotNull(portletId)) {
+			return doPortlet(request, response, themeDisplay, portletId);
 		}
 
 		// This is where the business logic of the framework controller would
@@ -135,32 +140,45 @@ public class SPALayoutTypeController implements LayoutTypeController {
 
 		printWriter.close();
 
-		// Return true if we don't want to get wrapped by the portal
-		// decorations, include anything that is not HTML.
-
 		return true;
 	}
 
+	/**
+	 * @return true if the type implemented can be the first page of the site
+	 */
 	@Override
 	public boolean isFirstPageable() {
 		return true;
 	}
 
+	/**
+	 * @return true if the type implemented can have child pages
+	 */
 	@Override
 	public boolean isParentable() {
 		return false;
 	}
 
+	/**
+	 * @return if the type implemented can appear in the sitemap
+	 */
 	@Override
 	public boolean isSitemapable() {
 		return true;
 	}
 
+	/**
+	 * @return true if the type implemented can have friendly urls
+	 */
 	@Override
 	public boolean isURLFriendliable() {
 		return true;
 	}
 
+	/**
+	 * Used to determine if this type can take effect if it matches certain
+	 * criteria. Any of the input data can be used as criteria.
+	 */
 	@Override
 	public boolean matches(
 		Layout layout, String friendlyURL, String queryString) {
@@ -176,6 +194,26 @@ public class SPALayoutTypeController implements LayoutTypeController {
 	@Deactivate
 	private void deactivate() {
 		System.out.println(this + " deactivated!");
+	}
+
+	private boolean doPortlet(
+			HttpServletRequest request, HttpServletResponse response,
+			ThemeDisplay themeDisplay, String portletId)
+		throws Exception {
+
+		Layout layout = themeDisplay.getLayout();
+
+		LayoutTypeWrapper layoutTypeWrapper =
+			(LayoutTypeWrapper)layout.getLayoutType();
+
+		LayoutTypeController layoutTypeFactory =
+			LayoutTypeControllerHelper.getLayoutTypeFactory("portlet");
+
+		layoutTypeWrapper = layoutTypeFactory.getLayoutTypeWrapper(
+			(LayoutTypePortlet)layoutTypeWrapper.getWrappedLayoutType());
+
+		return layoutTypeWrapper.includeLayoutContent(
+			request, response, themeDisplay, portletId);
 	}
 
 	private static final String[] _EMPTY_ARRAY = new String[0];
