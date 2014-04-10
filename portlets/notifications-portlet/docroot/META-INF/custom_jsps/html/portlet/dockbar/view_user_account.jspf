@@ -14,7 +14,7 @@
  */
 --%>
 
-<c:if test="<%= themeDisplay.isSignedIn() && user.isSetupComplete() %>">
+<c:if test="<%= themeDisplay.isImpersonated() || (themeDisplay.isSignedIn() && user.isSetupComplete()) %>">
 
 	<%
 	request.setAttribute(WebKeys.RENDER_PORTLET_BOUNDARY, false);
