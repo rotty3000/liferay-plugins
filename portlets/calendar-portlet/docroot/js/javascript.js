@@ -207,7 +207,7 @@ AUI.add(
 							select: afterSelectFn
 						},
 						maxResults: 20,
-						requestTemplate: '&' + instance.PORTLET_NAMESPACE + 'keywords={query}',
+						requestTemplate: '&' + instance.PORTLET_NAMESPACE + 'name={query}',
 						resultFilters: function(query, results) {
 							return AArray.filter(
 								results,
