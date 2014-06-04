@@ -44,12 +44,12 @@ import com.liferay.calendar.util.CalendarDataFormat;
 import com.liferay.calendar.util.CalendarDataHandler;
 import com.liferay.calendar.util.CalendarDataHandlerFactory;
 import com.liferay.calendar.util.CalendarResourceUtil;
+import com.liferay.calendar.util.CalendarSearcher;
 import com.liferay.calendar.util.CalendarUtil;
 import com.liferay.calendar.util.JCalendarUtil;
 import com.liferay.calendar.util.PortletKeys;
 import com.liferay.calendar.util.RSSUtil;
 import com.liferay.calendar.util.WebKeys;
-import com.liferay.calendar.util.comparator.CalendarResourceNameComparator;
 import com.liferay.calendar.workflow.CalendarBookingWorkflowConstants;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -59,6 +59,12 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
@@ -78,29 +84,23 @@ import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.service.SubscriptionLocalServiceUtil;
-import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.comparator.UserFirstNameComparator;
 import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.service.MBMessageServiceUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
-import com.liferay.util.dao.orm.CustomSQLUtil;
 
 import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -115,6 +115,8 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eduardo Lundgren
@@ -959,58 +961,43 @@ public class CalendarPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String keywords = ParamUtil.getString(resourceRequest, "keywords");
+		String name = ParamUtil.getString(resourceRequest, "name");
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		long classNameId = PortalUtil.getClassNameId(CalendarResource.class);
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(resourceRequest);
+		SearchContext searchContext = SearchContextFactory.getInstance(
+			httpServletRequest);
 
-		List<CalendarResource> calendarResources =
-			CalendarResourceServiceUtil.search(
-				themeDisplay.getCompanyId(),
-				new long[] {
-					themeDisplay.getCompanyGroupId(),
-					themeDisplay.getScopeGroupId()
-				},
-				new long[] {classNameId}, keywords, true, true, 0,
-				SearchContainer.DEFAULT_DELTA,
-				new CalendarResourceNameComparator());
+		searchContext.setAttribute(Field.NAME, name);
+		searchContext.setAttribute("resourceName", name);
+		searchContext.setEnd(SearchContainer.DEFAULT_DELTA);
+		searchContext.setStart(0);
 
-		for (CalendarResource calendarResource : calendarResources) {
-			addCalendarJSONObject(
-				resourceRequest, jsonArray, calendarResource.getClassNameId(),
-				calendarResource.getClassPK());
-		}
+		Indexer indexer = CalendarSearcher.getInstance();
 
-		long groupClassNameId = PortalUtil.getClassNameId(Group.class);
+		Hits hits = indexer.search(searchContext, Field.NAME, "resourceName");
 
-		String name = StringUtil.merge(
-			CustomSQLUtil.keywords(keywords), StringPool.BLANK);
+		PermissionChecker permissionChecker =
+			themeDisplay.getPermissionChecker();
 
-		LinkedHashMap<String, Object> params =
-			new LinkedHashMap<String, Object>();
+		for (Document document : hits.getDocs()) {
+			Field calendarIdField = document.getField(Field.ENTRY_CLASS_PK);
+			long calendarId = Long.valueOf(calendarIdField.getValue());
 
-		params.put("usersGroups", themeDisplay.getUserId());
+			Calendar calendar = CalendarServiceUtil.getCalendar(calendarId);
 
-		List<Group> groups = GroupLocalServiceUtil.search(
-			themeDisplay.getCompanyId(), name, null, params, true, 0,
-			SearchContainer.DEFAULT_DELTA);
+			if (!CalendarPermission.contains(
+					permissionChecker, calendar, ActionKeys.VIEW)) {
 
-		for (Group group : groups) {
-			addCalendarJSONObject(
-				resourceRequest, jsonArray, groupClassNameId,
-				group.getGroupId());
-		}
+				continue;
+			}
 
-		long userClassNameId = PortalUtil.getClassNameId(User.class);
+			JSONObject jsonObject = CalendarUtil.toCalendarJSONObject(
+				themeDisplay, calendar);
 
-		List<User> users = UserLocalServiceUtil.search(
-			themeDisplay.getCompanyId(), keywords, 0, null, 0,
-			SearchContainer.DEFAULT_DELTA, new UserFirstNameComparator());
-
-		for (User user : users) {
-			addCalendarJSONObject(
-				resourceRequest, jsonArray, userClassNameId, user.getUserId());
+			jsonArray.put(jsonObject);
 		}
 
 		writeJSON(resourceRequest, resourceResponse, jsonArray);
