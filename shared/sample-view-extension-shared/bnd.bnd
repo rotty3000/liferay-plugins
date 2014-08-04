@@ -1,0 +1,10 @@
+Bundle-Name: Sample View Extension
+Include-Resource: classes
+
+Import-Package:\
+	${jsp.imports}
+
+Web-ContextPath: /myextension
+
+-wab: web
+-wablib: lib/util-taglib.jar
