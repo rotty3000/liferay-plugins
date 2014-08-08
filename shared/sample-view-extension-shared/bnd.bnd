@@ -1,8 +1,7 @@
 Bundle-Name: Sample View Extension
 Include-Resource: classes
 
-Import-Package:\
-	${jsp.imports}
+Import-Package: com.liferay.portal.servlet.jsp.compiler.compiler,*
 
 Web-ContextPath: /myextension
 
