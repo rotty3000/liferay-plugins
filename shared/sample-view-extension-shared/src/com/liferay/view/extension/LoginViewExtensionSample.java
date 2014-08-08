@@ -14,7 +14,7 @@
 
 package com.liferay.view.extension;
 
-import com.liferay.taglib.util.PortletViewExtension;
+import com.liferay.kernel.taglib.PortletViewExtension;
 import org.apache.jasper.servlet.JspServlet;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -22,15 +22,18 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.http.HttpService;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
+import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.WindowState;
 import javax.portlet.WindowStateException;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -42,6 +45,7 @@ import java.util.Hashtable;
 public class LoginViewExtensionSample implements PortletViewExtension {
 
 	private ServiceRegistration<Servlet> _servletServiceRegistration;
+	private ServletContext _servletContext;
 
 	@Override
 	public void render(
@@ -58,20 +62,37 @@ public class LoginViewExtensionSample implements PortletViewExtension {
 
 		renderResponse.getWriter().write("<a href=\""+actionURL.toString()+"\">extension link</a>");
 
-		renderRequest.
-			getPortletSession().
-			getPortletContext().
-			getRequestDispatcher("/o/sample-view-extension/extension.jsp").
+		try {
+			renderRequest.
+				getPortletSession().
+				getPortletContext().
+				getRequestDispatcher("/o/" + _servletContext.getContextPath() + "/extension.jsp").include(
+				renderRequest, renderResponse
+			);
+		} catch (PortletException e) {
+			throw new IOException(e);
+		}
+	}
+
+	@Reference(
+		target = "(original.bean=*)"
+	)
+	protected void setServletContext(ServletContext servletContext) {
+		_servletContext = servletContext;
 	}
 
 	@Activate
 	protected void createJspServlet() {
 
+		ServletContextHelper servletContextHelper = new ServletContextHelper() {
+
+		};
+
 		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-			"sample-view-extension");
+			_servletContext.getContextPath());
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, "jsp");
 		properties.put(

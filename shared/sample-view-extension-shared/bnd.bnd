@@ -3,7 +3,5 @@ Include-Resource: classes
 
 Import-Package: com.liferay.portal.servlet.jsp.compiler.compiler,*
 
-Web-ContextPath: /myextension
-
 -wab: web
 -wablib: lib/util-taglib.jar
