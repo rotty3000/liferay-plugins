@@ -22,7 +22,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -33,7 +32,6 @@ import javax.portlet.RenderResponse;
 import javax.portlet.WindowState;
 import javax.portlet.WindowStateException;
 import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -45,7 +43,6 @@ import java.util.Hashtable;
 public class LoginViewExtensionSample implements PortletViewExtension {
 
 	private ServiceRegistration<Servlet> _servletServiceRegistration;
-	private ServletContext _servletContext;
 
 	@Override
 	public void render(
@@ -66,19 +63,12 @@ public class LoginViewExtensionSample implements PortletViewExtension {
 			renderRequest.
 				getPortletSession().
 				getPortletContext().
-				getRequestDispatcher("/o/" + _servletContext.getContextPath() + "/extension.jsp").include(
+				getRequestDispatcher("/o/" + "sample-view-extension" + "/extension.jsp").include(
 				renderRequest, renderResponse
 			);
 		} catch (PortletException e) {
 			throw new IOException(e);
 		}
-	}
-
-	@Reference(
-		target = "(original.bean=*)"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
 	}
 
 	@Activate
@@ -92,7 +82,7 @@ public class LoginViewExtensionSample implements PortletViewExtension {
 
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-			_servletContext.getContextPath());
+			"sample-view-extension");
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, "jsp");
 		properties.put(
