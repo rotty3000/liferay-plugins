@@ -1,0 +1,3 @@
+Bundle-Name: Sample View Extension
+Bundle-Version: ${plugin.version}
+Include-Resource: classes
