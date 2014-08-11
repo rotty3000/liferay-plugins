@@ -28,6 +28,7 @@ import javax.portlet.RenderResponse;
 import javax.portlet.WindowState;
 import javax.portlet.WindowStateException;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -127,6 +128,16 @@ public class LoginViewExtensionSample implements ViewExtension{
 
 		writer.write(
 			"<a href=\"" + actionURL.toString() + "\">extension link</a>");
+
+		try {
+			RequestDispatcher requestDispatcher = request.getRequestDispatcher(
+				"/o/" + "sample-view-extension" + "/extension.jsp");
+
+			requestDispatcher.include(request, response);
+		}
+		catch (ServletException e) {
+			throw new IOException(e);
+		}
 	}
 
 	private ServiceRegistration<Servlet> _servletServiceRegistration;
