@@ -1,0 +1,7 @@
+Bundle-Name: Sample View Extension
+Include-Resource: classes
+
+Import-Package: com.liferay.portal.servlet.jsp.compiler.compiler,*
+
+-wab: web
+-wablib: lib/util-taglib.jar
