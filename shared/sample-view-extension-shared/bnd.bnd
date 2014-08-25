@@ -1,0 +1,12 @@
+Bundle-SymbolicName: sample-view-extension
+Bundle-Name: Sample View Extension
+Bundle-Version: ${plugin.version}
+Import-Package:\
+	${bnd.jsp.support.imports},\
+	*
+Include-Resource:\
+	classes,\
+	web,\
+	@lib/util-taglib.jar,\
+	@lib/util-java.jar,\
+	@lib/javax.servlet.jsp.jstl.jar!/META-INF/*.tld
