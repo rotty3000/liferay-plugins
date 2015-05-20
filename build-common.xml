@@ -1224,6 +1224,23 @@ Please find a solution that does not require portal-impl.jar.
 			</if>
 
 			<if>
+				<available file="${app.server.parent.dir}/osgi/portal/com.liferay.frontend.css.web.jar" />
+				<then>
+					<unzip
+						src="${app.server.parent.dir}/osgi/portal/com.liferay.frontend.css.web.jar"
+						dest="${app.server.portal.dir}"
+					>
+						<patternset>
+							<include name="**/html/themes/**"/>
+						</patternset>
+						<mapper>
+							<globmapper from="META-INF/resources/html/*" to="html/*" />
+						</mapper>
+					</unzip>
+				</then>
+			</if>
+
+			<if>
 				<equals arg1="${theme.parent}" arg2="_unstyled" />
 				<then>
 					<copy todir="@{module.dir}/docroot" overwrite="true" preservelastmodified="true">
