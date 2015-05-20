@@ -1223,6 +1223,18 @@ Please find a solution that does not require portal-impl.jar.
 				</then>
 			</if>
 
+			<unzip
+				src="${app.server.parent.dir}/osgi/portal/com.liferay.frontend.css.web.jar"
+				dest="${app.server.portal.dir}"
+			>
+				<patternset>
+					<include name="**/html/themes/**"/>
+				</patternset>
+				<mapper>
+					<globmapper from="META-INF/resources/html/*" to="html/*" />
+				</mapper>
+			</unzip>
+
 			<if>
 				<equals arg1="${theme.parent}" arg2="_unstyled" />
 				<then>
@@ -1322,6 +1334,8 @@ Please find a solution that does not require portal-impl.jar.
 					</then>
 				</elseif>
 			</if>
+
+			<delete dir="${app.server.portal.dir}/html/themes" />
 
 			<if>
 				<available file="@{module.dir}/docroot/_diffs" />
