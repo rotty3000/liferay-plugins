@@ -427,13 +427,17 @@
 	</target>
 
 	<target name="build-lang-cmd">
+		<path id="lang.builder.classpath">
+			<fileset dir="${sdk.dir}/dependencies/com.liferay.lang.builder/lib" includes="*.jar" />
+			<path refid="portal.classpath" />
+		</path>
+
 		<java
-			classname="com.liferay.portal.tools.LangBuilder"
-			classpathref="portal.classpath"
+			classname="com.liferay.lang.builder.LangBuilder"
+			classpathref="lang.builder.classpath"
 			fork="true"
 			newenvironment="true"
 		>
-			<jvmarg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 			<jvmarg value="-Dfile.encoding=UTF-8" />
 			<jvmarg value="-Duser.country=US" />
 			<jvmarg value="-Duser.language=en" />
@@ -441,6 +445,8 @@
 			<arg value="lang.file=${lang.file}" />
 			<arg value="lang.plugin=true" />
 			<arg value="lang.translate=${lang.translate}" />
+			<arg value="lang.translate.client.id=${microsoft.translator.client.id}" />
+			<arg value="lang.translate.client.secret=${microsoft.translator.client.secret}" />
 		</java>
 
 		<copy file="${lang.dir}/${lang.file}.properties" tofile="${lang.dir}/${lang.file}_en.properties" />
@@ -810,32 +816,6 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 		</if>
 
 		<var name="patched.file.available" unset="true" />
-	</target>
-
-	<target name="publish-local-m2-release" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="local-m2" />
-		</antcall>
-	</target>
-
-	<target name="publish-local-m2-snapshot" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="local-m2" />
-			<param name="plugin.release.qualifier" value="-SNAPSHOT" />
-		</antcall>
-	</target>
-
-	<target name="publish-remote-m2-release" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="sonatype-m2-release" />
-		</antcall>
-	</target>
-
-	<target name="publish-remote-m2-snapshot" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="sonatype-m2-snapshot" />
-			<param name="plugin.release.qualifier" value="-SNAPSHOT" />
-		</antcall>
 	</target>
 
 	<target name="shrink-zip-cmd">
