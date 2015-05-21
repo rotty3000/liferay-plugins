@@ -36,6 +36,12 @@ public class SampleLARBookingStagedModelDataHandler
 		{SampleLARBooking.class.getName()};
 
 	@Override
+	public void deleteStagedModel(SampleLARBooking sampleLARBooking) {
+		SampleLARBookingLocalServiceUtil.deleteSampleLARBooking(
+			sampleLARBooking);
+	}
+
+	@Override
 	public void deleteStagedModel(
 		String uuid, long groupId, String className, String extraData) {
 
@@ -43,8 +49,7 @@ public class SampleLARBookingStagedModelDataHandler
 			uuid, groupId);
 
 		if (sampleLARBooking != null) {
-			SampleLARBookingLocalServiceUtil.deleteSampleLARBooking(
-				sampleLARBooking);
+			deleteStagedModel(sampleLARBooking);
 		}
 	}
 
