@@ -46,15 +46,21 @@ public class CalendarNotificationTemplateStagedModelDataHandler
 
 	@Override
 	public void deleteStagedModel(
+		CalendarNotificationTemplate calendarNotificationTemplate) {
+
+		CalendarNotificationTemplateLocalServiceUtil.
+			deleteCalendarNotificationTemplate(calendarNotificationTemplate);
+	}
+
+	@Override
+	public void deleteStagedModel(
 		String uuid, long groupId, String className, String extraData) {
 
 		CalendarNotificationTemplate calendarNotificationTemplate =
 			fetchStagedModelByUuidAndGroupId(uuid, groupId);
 
 		if (calendarNotificationTemplate != null) {
-			CalendarNotificationTemplateLocalServiceUtil.
-				deleteCalendarNotificationTemplate(
-					calendarNotificationTemplate);
+			deleteStagedModel(calendarNotificationTemplate);
 		}
 	}
 
