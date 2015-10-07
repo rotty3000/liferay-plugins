@@ -298,12 +298,10 @@ public abstract class GadgetLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod() {
+		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<Gadget>() {
 				@Override
-				public void performAction(Object object)
+				public void performAction(Gadget stagedModel)
 					throws PortalException {
-					Gadget stagedModel = (Gadget)object;
-
 					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
 						stagedModel);
 				}

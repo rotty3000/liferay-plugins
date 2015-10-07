@@ -308,12 +308,10 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 
 		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod() {
+		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<WSRPProducer>() {
 				@Override
-				public void performAction(Object object)
+				public void performAction(WSRPProducer stagedModel)
 					throws PortalException {
-					WSRPProducer stagedModel = (WSRPProducer)object;
-
 					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
 						stagedModel);
 				}
