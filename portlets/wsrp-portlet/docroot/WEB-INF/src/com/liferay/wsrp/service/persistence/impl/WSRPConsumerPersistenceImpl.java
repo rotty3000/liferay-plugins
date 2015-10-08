@@ -1880,7 +1880,7 @@ public class WSRPConsumerPersistenceImpl extends BasePersistenceImpl<WSRPConsume
 				wsrpConsumer.setNew(false);
 			}
 			else {
-				session.merge(wsrpConsumer);
+				wsrpConsumer = (WSRPConsumer)session.merge(wsrpConsumer);
 			}
 		}
 		catch (Exception e) {
@@ -2346,7 +2346,7 @@ public class WSRPConsumerPersistenceImpl extends BasePersistenceImpl<WSRPConsume
 	}
 
 	@Override
-	protected Set<String> getBadColumnNames() {
+	public Set<String> getBadColumnNames() {
 		return _badColumnNames;
 	}
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
 
-<project name="build-common" xmlns:antelope="antlib:ise.antelope.tasks" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="build-common" xmlns:antelope="antlib:ise.antelope.tasks" xmlns:if="ant:if" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:unless="ant:unless">
 	<dirname file="${ant.file.build-common}" property="sdk.dir.native" />
 
 	<pathconvert property="sdk.dir" targetos="unix">
@@ -49,15 +49,6 @@
 	<property location="${app.server.portal.dir}/WEB-INF/lib" name="app.server.lib.portal.dir" />
 
 	<dirname file="${ivy.home}" property="ivy.home.dir" />
-
-	<if>
-		<not>
-			<equals arg1="${junit.debug}" arg2="true" />
-		</not>
-		<then>
-			<var name="junit.debug.jpda" value="" />
-		</then>
-	</if>
 
 	<property name="sdk.tools.dir" value="${ivy.home.dir}/tools" />
 
@@ -1192,6 +1183,7 @@ Please find a solution that does not require portal-impl.jar.
 
 	<macrodef name="compile-test-cmd">
 		<attribute name="module.dir" />
+		<attribute name="test.classpathref" default="test.classpath" />
 		<attribute name="test.type" />
 
 		<sequential>
@@ -1242,7 +1234,7 @@ Please find a solution that does not require portal-impl.jar.
 					</path>
 
 					<compile-java
-						javac.classpathref="test.classpath"
+						javac.classpathref="@{test.classpathref}"
 						javac.destdir="@{module.dir}/test-classes/@{test.type}"
 						javac.srcdir="@{module.dir}/test/@{test.type}"
 						module.dir="@{module.dir}"
@@ -1298,69 +1290,22 @@ Please find a solution that does not require portal-impl.jar.
 			</if>
 
 			<if>
-				<resourcecount count="1" when="eq">
-					<fileset dir="${module.framework.base.dir}/modules" includes="com.liferay.frontend.themes.web*.jar" />
-				</resourcecount>
-				<then>
-					<property name="frontend.themes.web.dir" value="${sdk.dir}/tmp/com.liferay.frontend.themes.web" />
-
-					<pathconvert property="frontend.themes.web.jar.path">
-						<path>
-							<fileset dir="${module.framework.base.dir}/modules" includes="com.liferay.frontend.themes.web*.jar" />
-						</path>
-					</pathconvert>
-
-					<basename file="${frontend.themes.web.jar.path}" property="frontend.themes.web.file" />
-
-					<if>
-						<not>
-							<uptodate
-								srcfile="${module.framework.base.dir}/modules/${frontend.themes.web.file}"
-								targetfile="${frontend.themes.web.dir}"
-							/>
-						</not>
-						<then>
-							<delete dir="${frontend.themes.web.dir}" />
-
-							<mkdir dir="${frontend.themes.web.dir}" />
-
-							<unzip
-								dest="${frontend.themes.web.dir}"
-								src="${frontend.themes.web.jar.path}"
-							>
-								<patternset>
-									<exclude name="**/META-INF/resources/**/*.css" />
-									<include name="**/META-INF/resources/**" />
-								</patternset>
-								<mapper>
-									<globmapper from="META-INF/resources/*" to="*" />
-								</mapper>
-							</unzip>
-
-							<touch>
-								<fileset dir="${frontend.themes.web.dir}" />
-							</touch>
-						</then>
-					</if>
-				</then>
-				<else>
-					<fail>The module com.liferay.frontend.themes.web.jar does not exist.</fail>
-				</else>
-			</if>
-
-			<if>
 				<equals arg1="${theme.parent}" arg2="_unstyled" />
 				<then>
+					<unzip-parent-theme-jar theme.jar.name="com.liferay.frontend.theme.unstyled" />
+
+					<property name="unstyled.tmp.dir" value="${sdk.dir}/tmp/com.liferay.frontend.theme.unstyled" />
+
 					<copy todir="@{module.dir}/docroot" overwrite="true" preservelastmodified="true">
 						<fileset
-							dir="${frontend.themes.web.dir}/_unstyled"
+							dir="${unstyled.tmp.dir}/_unstyled"
 							excludes="templates/**"
 						/>
 					</copy>
 
 					<copy todir="@{module.dir}/docroot/templates" overwrite="true" preservelastmodified="true">
 						<fileset
-							dir="${frontend.themes.web.dir}/_unstyled/templates"
+							dir="${unstyled.tmp.dir}/_unstyled/templates"
 							excludes="init.${theme.type}"
 							includes="*.${theme.type}"
 						/>
@@ -1369,16 +1314,22 @@ Please find a solution that does not require portal-impl.jar.
 				<elseif>
 					<equals arg1="${theme.parent}" arg2="_styled" />
 					<then>
+						<unzip-parent-theme-jar theme.jar.name="com.liferay.frontend.theme.unstyled" />
+						<unzip-parent-theme-jar theme.jar.name="com.liferay.frontend.theme.styled" />
+
+						<property name="styled.tmp.dir" value="${sdk.dir}/tmp/com.liferay.frontend.theme.styled" />
+						<property name="unstyled.tmp.dir" value="${sdk.dir}/tmp/com.liferay.frontend.theme.unstyled" />
+
 						<copy todir="@{module.dir}/docroot" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/_unstyled"
+								dir="${unstyled.tmp.dir}/_unstyled"
 								excludes="templates/**"
 							/>
 						</copy>
 
 						<copy todir="@{module.dir}/docroot/templates" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/_unstyled/templates"
+								dir="${unstyled.tmp.dir}/_unstyled/templates"
 								excludes="init.${theme.type}"
 								includes="*.${theme.type}"
 							/>
@@ -1386,7 +1337,7 @@ Please find a solution that does not require portal-impl.jar.
 
 						<copy todir="@{module.dir}/docroot" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/_styled"
+								dir="${styled.tmp.dir}/_styled"
 							/>
 						</copy>
 					</then>
@@ -1394,16 +1345,20 @@ Please find a solution that does not require portal-impl.jar.
 				<elseif>
 					<equals arg1="${theme.parent}" arg2="admin" />
 					<then>
+						<unzip-parent-theme-jar theme.jar.name="com.liferay.frontend.theme.admin.web" />
+
+						<property name="classic.tmp.dir" value="${sdk.dir}/tmp/com.liferay.frontend.theme.classic.web" />
+
 						<copy todir="@{module.dir}/docroot" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/admin"
+								dir="${classic.tmp.dir}/admin"
 								excludes="**/.sass-cache/**,_diffs/**,templates/**"
 							/>
 						</copy>
 
 						<copy todir="@{module.dir}/docroot/templates" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/admin/templates"
+								dir="${classic.tmp.dir}/admin/templates"
 								includes="*.${theme.type}"
 							/>
 						</copy>
@@ -1412,16 +1367,20 @@ Please find a solution that does not require portal-impl.jar.
 				<elseif>
 					<equals arg1="${theme.parent}" arg2="classic" />
 					<then>
+						<unzip-parent-theme-jar theme.jar.name="com.liferay.frontend.theme.classic.web" />
+
+						<property name="classic.tmp.dir" value="${sdk.dir}/tmp/com.liferay.frontend.theme.classic.web" />
+
 						<copy todir="@{module.dir}/docroot" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/classic"
+								dir="${classic.tmp.dir}/classic"
 								excludes="**/.sass-cache/**,_diffs/**,templates/**"
 							/>
 						</copy>
 
 						<copy todir="@{module.dir}/docroot/templates" overwrite="true" preservelastmodified="true">
 							<fileset
-								dir="${frontend.themes.web.dir}/classic/templates"
+								dir="${classic.tmp.dir}/classic/templates"
 								includes="*.${theme.type}"
 							/>
 						</copy>
@@ -2793,6 +2752,7 @@ Please find a solution that does not require portal-impl.jar.
 		<attribute name="junit.forkmode" />
 		<attribute name="module.dir" />
 		<attribute name="test.class" />
+		<attribute name="test.classpathref" default="test.classpath" />
 		<attribute name="test.type" />
 
 		<sequential>
@@ -2814,6 +2774,7 @@ Please find a solution that does not require portal-impl.jar.
 
 					<compile-test-cmd
 						module.dir="@{module.dir}"
+						test.classpathref="@{test.classpathref}"
 						test.type="@{test.type}"
 					/>
 
@@ -2861,11 +2822,12 @@ Please find a solution that does not require portal-impl.jar.
 
 							<junit dir="@{module.dir}" fork="on" forkmode="@{junit.forkmode}" jvm="${junit.jvm}" outputtoformatters="false" printsummary="on" showoutput="true">
 								<sysproperty key="app.server.tomcat.dir" value="${app.server.tomcat.dir}" />
+								<sysproperty if:true="${jvm.debug}" key="jvm.debug" value="true" />
 								<sysproperty key="net.sourceforge.cobertura.datafile" file="@{module.dir}/test-coverage/@{test.type}/cobertura.ser" />
 								<sysproperty key="whip.agent" file="${whip.agent}" />
 								<sysproperty key="whip.datafile" file="@{module.dir}/test-coverage/whip.dat" />
 								<sysproperty key="whip.instrument.dump" value="${whip.instrument.dump}" />
-								<jvmarg line="${junit.debug.jpda}" />
+								<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 								<jvmarg line="${junit.java.gc}" />
 								<jvmarg line="${whip.agent}" />
 								<jvmarg value="-Dexternal-properties=${test.properties}" />
@@ -2878,7 +2840,7 @@ Please find a solution that does not require portal-impl.jar.
 								<jvmarg value="-Duser.timezone=GMT" />
 								<classpath location="@{module.dir}/test-coverage/@{test.type}" />
 								<classpath location="${sdk.dir}/dependencies/net.sourceforge.cobertura/lib/cobertura.jar" />
-								<classpath refid="test.classpath" />
+								<classpath refid="@{test.classpathref}" />
 								<formatter type="brief" usefile="false" />
 								<formatter type="xml" />
 								<batchtest todir="@{module.dir}/test-results/@{test.type}">
@@ -2916,14 +2878,77 @@ Please find a solution that does not require portal-impl.jar.
 
 	<macrodef name="test-unit">
 		<attribute name="module.dir" />
+		<attribute name="test.classpathref" default="test.classpath" />
 
 		<sequential>
 			<test-cmd
 				junit.forkmode="perTest"
 				module.dir="@{module.dir}"
 				test.class="**/*Test.class"
+				test.classpathref="@{test.classpathref}"
 				test.type="unit"
 			/>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="unzip-parent-theme-jar">
+		<attribute name="theme.jar.name" />
+
+		<sequential>
+			<if>
+				<resourcecount count="1" when="eq">
+					<fileset dir="${module.framework.base.dir}/modules" includes="@{theme.jar.name}*.jar" />
+				</resourcecount>
+				<then>
+					<property name="theme.tmp.dir" value="${sdk.dir}/tmp/@{theme.jar.name}" />
+
+					<pathconvert property="frontend.theme.web.jar.path">
+						<path>
+							<fileset dir="${module.framework.base.dir}/modules" includes="@{theme.jar.name}*.jar" />
+						</path>
+					</pathconvert>
+
+					<basename file="${frontend.theme.web.jar.path}" property="frontend.theme.web.file" />
+
+					<if>
+						<not>
+							<uptodate
+								srcfile="${module.framework.base.dir}/modules/${frontend.theme.web.file}"
+								targetfile="${theme.tmp.dir}"
+							/>
+						</not>
+						<then>
+							<delete dir="${theme.tmp.dir}" />
+
+							<mkdir dir="${theme.tmp.dir}" />
+
+							<unzip
+								dest="${theme.tmp.dir}"
+								src="${frontend.theme.web.jar.path}"
+							>
+								<patternset>
+									<exclude name="**/META-INF/resources/**/*.css" />
+									<include name="**/META-INF/resources/**" />
+								</patternset>
+								<mapper>
+									<globmapper from="META-INF/resources/*" to="*" />
+								</mapper>
+							</unzip>
+
+							<touch>
+								<fileset dir="${theme.tmp.dir}" />
+							</touch>
+						</then>
+					</if>
+				</then>
+				<else>
+					<fail>The module @{theme.jar.name} does not exist.</fail>
+				</else>
+			</if>
+
+			<var name="frontend.theme.web.file" unset="true" />
+			<var name="frontend.theme.web.jar.path" unset="true"/>
+			<var name="theme.tmp.dir" unset="true"/>
 		</sequential>
 	</macrodef>
 
@@ -3112,15 +3137,20 @@ for (String path : paths) {
 								<zip
 									basedir="@{module.dir}/docroot"
 									destfile="${plugin.file}"
-									excludes="**/.sass-cache/**,**/*.scss,_diffs.*,_diffs/**,${plugins.war.excludes}"
+									excludes="**/.sass-cache/**,**/*.scss,WEB-INF/liferay-hook.xml*,_diffs.*,_diffs/**,${plugins.war.excludes}"
 								>
+									<zipfileset
+										dir="@{module.dir}/docroot"
+										fullpath="WEB-INF/liferay-hook.xml"
+										includes="WEB-INF/liferay-hook.xml.processed"
+									/>
 									<mappedresources>
 										<fileset 
 											dir="@{module.dir}/docroot"
 											includes="**/.sass-cache/*.css"
 										/>
 										<filtermapper>
-											<replacestring from="/.sass-cache/" to="/" />
+											<replacestring from=".sass-cache" to="" />
 										</filtermapper>
 									</mappedresources>
 								</zip>
@@ -3198,7 +3228,7 @@ for (String path : paths) {
 								includes="**/.sass-cache/*.css"
 							/>
 							<filtermapper>
-								<replacestring from="/.sass-cache/" to="/" />
+								<replacestring from=".sass-cache" to="" />
 							</filtermapper>
 						</mappedresources>
 					</zip>
@@ -3220,7 +3250,7 @@ for (String path : paths) {
 								includes="**/.sass-cache/*.css"
 							/>
 							<filtermapper>
-								<replacestring from="/.sass-cache/" to="/" />
+								<replacestring from=".sass-cache" to="" />
 							</filtermapper>
 						</mappedresources>
 					</zip>

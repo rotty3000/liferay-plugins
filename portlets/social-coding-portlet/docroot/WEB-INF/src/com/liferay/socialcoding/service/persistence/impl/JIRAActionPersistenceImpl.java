@@ -1835,7 +1835,7 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 				jiraAction.setNew(false);
 			}
 			else {
-				session.merge(jiraAction);
+				jiraAction = (JIRAAction)session.merge(jiraAction);
 			}
 		}
 		catch (Exception e) {
@@ -2292,7 +2292,7 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 	}
 
 	@Override
-	protected Set<String> getBadColumnNames() {
+	public Set<String> getBadColumnNames() {
 		return _badColumnNames;
 	}
 

@@ -15,7 +15,10 @@
 package com.liferay.knowledgebase.admin.util;
 
 import com.liferay.knowledgebase.model.KBArticle;
+import com.liferay.knowledgebase.model.KBFolder;
+import com.liferay.knowledgebase.model.KBFolderConstants;
 import com.liferay.knowledgebase.service.KBArticleLocalServiceUtil;
+import com.liferay.knowledgebase.service.KBFolderLocalServiceUtil;
 import com.liferay.knowledgebase.service.permission.KBArticlePermission;
 import com.liferay.knowledgebase.util.KnowledgeBaseUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
@@ -125,6 +128,7 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		document.addText(Field.DESCRIPTION, kbArticle.getDescription());
 		document.addText(Field.TITLE, kbArticle.getTitle());
 
+		document.addKeyword("folderNames", getKBFolderNames(kbArticle));
 		document.addKeyword("titleKeyword", kbArticle.getTitle(), true);
 
 		return document;
@@ -174,6 +178,25 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		reindexKBArticles(companyId);
 	}
 
+	protected String[] getKBFolderNames(KBArticle kbArticle)
+		throws PortalException {
+
+		long kbFolderId = kbArticle.getKbFolderId();
+
+		Collection<String> kbFolderNames = new ArrayList<>();
+
+		while (kbFolderId != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			KBFolder kbFolder = KBFolderLocalServiceUtil.getKBFolder(
+				kbFolderId);
+
+			kbFolderNames.add(kbFolder.getName());
+
+			kbFolderId = kbFolder.getParentKBFolderId();
+		}
+
+		return kbFolderNames.toArray(new String[kbFolderNames.size()]);
+	}
+
 	protected void reindexKBArticles(KBArticle kbArticle) throws Exception {
 
 		// See KBArticlePermission#contains
@@ -212,12 +235,10 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 			});
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod() {
+			new ActionableDynamicQuery.PerformActionMethod<KBArticle>() {
 
 				@Override
-				public void performAction(Object object) {
-					KBArticle kbArticle = (KBArticle)object;
-
+				public void performAction(KBArticle kbArticle) {
 					try {
 						Document document = getDocument(kbArticle);
 

@@ -107,7 +107,6 @@
 				<arg value="service.osgi.module=${service.osgi.module}" />
 				<arg value="service.plugin.name=${service.plugin.name}" />
 				<arg value="service.props.util=${service.props.util}" />
-				<arg value="service.remoting.file=" />
 				<arg value="service.resources.dir=${basedir}/${service.base.dir}/src" />
 				<arg value="service.spring.file=${basedir}/${service.base.dir}/src/META-INF/@{service.spring.file.name}" />
 				<arg value="service.spring.namespaces=${service.spring.namespaces}" />
@@ -234,6 +233,7 @@
 	</macrodef>
 
 	<macrodef name="compile-jsp">
+		<attribute name="compile.jsp.delete.generated.files" default="true" />
 		<attribute name="compile.jsp.docroot.dir" />
 		<attribute name="compile.jsp.temp.dir" default="" />
 
@@ -329,7 +329,13 @@
 						</else>
 					</if>
 
-					<delete dir="classes/tomcat" quiet="true" />
+					<tstamp>
+						<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
+					</tstamp>
+
+					<var name="compile.jsp.jspc.dir" value="${tstamp.value}" />
+
+					<mkdir dir="${compile.jsp.jspc.dir}" />
 
 					<java
 						classname="com.liferay.jasper.jspc.JspC"
@@ -341,7 +347,7 @@
 					>
 						<sysproperty key="jspc.module.web" value="${jspc.module.web}" />
 						<sysproperty key="jspc.portal.dir" value="${app.server.portal.dir}" />
-						<arg line="-d classes/tomcat -webapp @{compile.jsp.docroot.dir}" />
+						<arg line="-d ${compile.jsp.jspc.dir}/src -webapp @{compile.jsp.docroot.dir}" />
 					</java>
 
 					<echo>${jspc.output}</echo>
@@ -349,15 +355,17 @@
 					<if>
 						<contains string="${jspc.output}" substring="JasperException" />
 						<then>
-							<delete dir="classes/tomcat" quiet="true" />
+							<delete dir="${compile.jsp.jspc.dir}/src" quiet="true" />
 
 							<fail>JSPs failed to compile.</fail>
 						</then>
 					</if>
 
 					<if>
-						<available file="classes/tomcat" type="dir" />
+						<available file="${compile.jsp.jspc.dir}/src" type="dir" />
 						<then>
+							<mkdir dir="${compile.jsp.jspc.dir}/classes" />
+
 							<delete file="${sdk.dir}/jspc.javac.output.txt" />
 
 							<record action="start" name="${sdk.dir}/jspc.javac.output.txt" />
@@ -366,13 +374,13 @@
 								classpathref="jspc.classpath"
 								compiler="${javac.compiler}"
 								deprecation="${javac.deprecation}"
-								destdir="classes/tomcat"
+								destdir="${compile.jsp.jspc.dir}/classes"
 								encoding="${javac.encoding}"
 								errorProperty="jspc.javac.fail"
 								failonerror="false"
 								includeAntRuntime="false"
 								nowarn="on"
-								srcdir="classes/tomcat"
+								srcdir="${compile.jsp.jspc.dir}/src"
 							/>
 
 							<record action="stop" name="${sdk.dir}/jspc.javac.output.txt" />
@@ -388,7 +396,12 @@
 								</then>
 							</if>
 
-							<delete dir="classes/tomcat" quiet="true" />
+							<if>
+								<istrue value="@{compile.jsp.delete.generated.files}" />
+								<then>
+									<delete dir="${compile.jsp.jspc.dir}" quiet="true" />
+								</then>
+							</if>
 						</then>
 					</if>
 
@@ -493,8 +506,6 @@
 			<arg value="lang.translate.client.id=${microsoft.translator.client.id}" />
 			<arg value="lang.translate.client.secret=${microsoft.translator.client.secret}" />
 		</java>
-
-		<copy file="${lang.dir}/${lang.file}.properties" tofile="${lang.dir}/${lang.file}_en.properties" />
 	</target>
 
 	<target name="build-service">

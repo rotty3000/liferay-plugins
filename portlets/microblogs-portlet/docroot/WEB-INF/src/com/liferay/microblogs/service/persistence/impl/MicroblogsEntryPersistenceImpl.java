@@ -8681,7 +8681,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 				microblogsEntry.setNew(false);
 			}
 			else {
-				session.merge(microblogsEntry);
+				microblogsEntry = (MicroblogsEntry)session.merge(microblogsEntry);
 			}
 		}
 		catch (Exception e) {
@@ -9261,7 +9261,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 	}
 
 	@Override
-	protected Set<String> getBadColumnNames() {
+	public Set<String> getBadColumnNames() {
 		return _badColumnNames;
 	}
 
