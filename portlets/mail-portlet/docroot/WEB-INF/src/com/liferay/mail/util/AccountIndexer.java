@@ -16,7 +16,6 @@ package com.liferay.mail.util;
 
 import com.liferay.mail.model.Account;
 import com.liferay.mail.service.AccountLocalServiceUtil;
-import com.liferay.mail.service.persistence.AccountActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -132,30 +131,34 @@ public class AccountIndexer extends BaseIndexer<Account> {
 	}
 
 	protected void reindexMessages(long companyId) throws PortalException {
-		ActionableDynamicQuery actionableDynamicQuery =
-			new AccountActionableDynamicQuery() {
+		final ActionableDynamicQuery actionableDynamicQuery =
+			AccountLocalServiceUtil.getActionableDynamicQuery();
 
-			@Override
-			protected void performAction(Object object) {
-				Account account = (Account)object;
+		actionableDynamicQuery.setCompanyId(companyId);
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod() {
+				@Override
+				public void performAction(Object object)
+					throws PortalException {
 
-				try {
-					Document document = getDocument(account);
+					Account account = (Account)object;
 
-					addDocument(document);
-				}
-				catch (PortalException pe) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index account " + account.getAccountId(),
-							pe);
+					try {
+						Document document = getDocument(account);
+
+						actionableDynamicQuery.addDocument(document);
+					}
+					catch (PortalException pe) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to index account " +
+									account.getAccountId(),
+								pe);
+						}
 					}
 				}
 			}
-
-		};
-
-		actionableDynamicQuery.setCompanyId(companyId);
+		);
 		actionableDynamicQuery.setSearchEngineId(getSearchEngineId());
 
 		actionableDynamicQuery.performActions();

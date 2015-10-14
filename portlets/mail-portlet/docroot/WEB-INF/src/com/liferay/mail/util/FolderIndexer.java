@@ -16,7 +16,6 @@ package com.liferay.mail.util;
 
 import com.liferay.mail.model.Folder;
 import com.liferay.mail.service.FolderLocalServiceUtil;
-import com.liferay.mail.service.persistence.FolderActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -134,30 +133,34 @@ public class FolderIndexer extends BaseIndexer<Folder> {
 	}
 
 	protected void reindexMessages(long companyId) throws PortalException {
-		ActionableDynamicQuery actionableDynamicQuery =
-			new FolderActionableDynamicQuery() {
-
-			@Override
-			protected void performAction(Object object) {
-				Folder folder = (Folder)object;
-
-				try {
-					Document document = getDocument(folder);
-
-					addDocument(document);
-				}
-				catch (PortalException pe) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index folder " + folder.getFolderId(),
-							pe);
-					}
-				}
-			}
-
-		};
+		final ActionableDynamicQuery actionableDynamicQuery =
+			FolderLocalServiceUtil.getActionableDynamicQuery();
 
 		actionableDynamicQuery.setCompanyId(companyId);
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod() {
+
+				@Override
+				public void performAction(Object object)
+					throws PortalException {
+
+					Folder folder = (Folder)object;
+
+					try {
+						Document document = getDocument(folder);
+
+						actionableDynamicQuery.addDocument(document);
+					}
+					catch (PortalException pe) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to index folder " +
+									folder.getFolderId(),
+								pe);
+						}
+					}
+			}
+		});
 		actionableDynamicQuery.setSearchEngineId(getSearchEngineId());
 
 		actionableDynamicQuery.performActions();
