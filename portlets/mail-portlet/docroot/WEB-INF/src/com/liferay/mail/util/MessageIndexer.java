@@ -121,6 +121,7 @@ public class MessageIndexer extends BaseIndexer<Message> {
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
 			new ActionableDynamicQuery.PerformActionMethod() {
+
 				@Override
 				public void performAction(Object object)
 					throws PortalException {

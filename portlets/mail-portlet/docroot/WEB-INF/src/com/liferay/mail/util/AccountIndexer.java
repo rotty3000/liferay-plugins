@@ -137,6 +137,7 @@ public class AccountIndexer extends BaseIndexer<Account> {
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
 			new ActionableDynamicQuery.PerformActionMethod() {
+
 				@Override
 				public void performAction(Object object)
 					throws PortalException {
