@@ -138,13 +138,11 @@ public class FolderIndexer extends BaseIndexer<Folder> {
 
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod() {
+			new ActionableDynamicQuery.PerformActionMethod<Folder>() {
 
 				@Override
-				public void performAction(Object object)
+				public void performAction(Folder folder)
 					throws PortalException {
-
-					Folder folder = (Folder)object;
 
 					try {
 						Document document = getDocument(folder);

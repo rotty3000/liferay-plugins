@@ -136,13 +136,11 @@ public class AccountIndexer extends BaseIndexer<Account> {
 
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod() {
+			new ActionableDynamicQuery.PerformActionMethod<Account>() {
 
 				@Override
-				public void performAction(Object object)
+				public void performAction(Account account)
 					throws PortalException {
-
-					Account account = (Account)object;
 
 					try {
 						Document document = getDocument(account);
