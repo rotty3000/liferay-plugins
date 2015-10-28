@@ -1,0 +1,9 @@
+Bundle-Name: Sample OSGI JSP Overwrite
+Bundle-SymbolicName: com.liferay.shopping.overwrite
+Bundle-Version: 1.0.0
+Include-Resource:\
+	classes,\
+	WEB-INF/custom_jsps=src/WEB-INF/custom_jsps,\
+	META-INF=src/META-INF/tld/
+	
+Web-ContextPath: /sample-osgi-overwrite
