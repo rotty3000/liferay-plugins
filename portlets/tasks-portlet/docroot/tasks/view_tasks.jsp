@@ -69,7 +69,7 @@ taskListURL.setParameter("tabs2", tabs2);
 	emptyResultsMessage="no-tasks-were-found"
 	headerNames="description,due, "
 	iteratorURL="<%= portletURL %>"
-	total= "<%= TasksEntryLocalServiceUtil.getTasksEntriesCount(groupId, userId, 0, assigneeUserId, status, assetTagIds, new long[0]) %>"
+	total="<%= TasksEntryLocalServiceUtil.getTasksEntriesCount(groupId, userId, 0, assigneeUserId, status, assetTagIds, new long[0]) %>"
 >
 	<liferay-ui:search-container-results
 		results="<%= TasksEntryLocalServiceUtil.getTasksEntries(groupId, userId, 0, assigneeUserId, status, assetTagIds, new long[0], searchContainer.getStart(), searchContainer.getEnd()) %>"
@@ -133,6 +133,7 @@ taskListURL.setParameter("tabs2", tabs2);
 					</c:otherwise>
 				</c:choose>
 			</div>
+
 			<div class="result-data">
 				<c:if test="<%= group.isUser() %>">
 
@@ -168,7 +169,7 @@ taskListURL.setParameter("tabs2", tabs2);
 			name="due"
 		>
 			<c:choose>
-				<c:when test="<%= (TasksEntryPermission.contains(permissionChecker, tasksEntry, ActionKeys.UPDATE)) %>">
+				<c:when test="<%= TasksEntryPermission.contains(permissionChecker, tasksEntry, ActionKeys.UPDATE) %>">
 
 					<%
 					int curStatus = tasksEntry.getStatus();

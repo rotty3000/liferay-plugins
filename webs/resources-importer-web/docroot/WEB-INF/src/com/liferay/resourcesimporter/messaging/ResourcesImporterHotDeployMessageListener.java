@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.resourcesimporter.util.Importer;
 import com.liferay.resourcesimporter.util.ImporterException;
@@ -58,10 +59,10 @@ public class ResourcesImporterHotDeployMessageListener
 
 		String resourcesDir = pluginPackageProperties.getResourcesDir();
 
-		if ((servletContext.getResource(
-				ImporterFactory.RESOURCES_DIR) == null) &&
-			(servletContext.getResource(
-				ImporterFactory.TEMPLATES_DIR) == null) &&
+		if ((servletContext.getResource(ImporterFactory.RESOURCES_DIR) ==
+				null) &&
+			(servletContext.getResource(ImporterFactory.TEMPLATES_DIR) ==
+				null) &&
 			Validator.isNull(resourcesDir)) {
 
 			return;
@@ -74,7 +75,7 @@ public class ResourcesImporterHotDeployMessageListener
 			ExportImportThreadLocal.setPortletImportInProcess(true);
 
 			for (Company company : companies) {
-				importResources(
+				_importResources(
 					company, servletContext, pluginPackageProperties,
 					message.getResponseId());
 			}
@@ -90,7 +91,7 @@ public class ResourcesImporterHotDeployMessageListener
 		initialize(message);
 	}
 
-	private void importResources(
+	private void _importResources(
 			Company company, ServletContext servletContext,
 			PluginPackageProperties pluginPackageProperties,
 			String messageResponseId)
@@ -112,8 +113,8 @@ public class ResourcesImporterHotDeployMessageListener
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
-						"Group or layout set prototype already exists " +
-							"for company " + company.getWebId());
+						"Group or layout set prototype already exists for " +
+							"company " + company.getWebId());
 				}
 
 				return;
@@ -128,13 +129,21 @@ public class ResourcesImporterHotDeployMessageListener
 			importer.importResources();
 
 			if (_log.isInfoEnabled()) {
+				StringBundler sb = new StringBundler(7);
+
+				sb.append("Importing resources from ");
+				sb.append(servletContext.getServletContextName());
+				sb.append(" to group ");
+				sb.append(importer.getGroupId());
+				sb.append(" takes ");
+
 				long endTime = System.currentTimeMillis() - startTime;
 
-				_log.info(
-					"Importing resources from " +
-						servletContext.getServletContextName() +
-						" to group " + importer.getGroupId() + " takes " +
-							endTime + " ms");
+				sb.append(endTime);
+
+				sb.append(" ms");
+
+				_log.info(sb.toString());
 			}
 
 			Message message = new Message();

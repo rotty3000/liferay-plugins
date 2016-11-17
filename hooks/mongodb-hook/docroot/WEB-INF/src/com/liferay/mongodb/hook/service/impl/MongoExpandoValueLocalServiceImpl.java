@@ -100,8 +100,7 @@ public class MongoExpandoValueLocalServiceImpl
 			DBObject operatorDBObject = new BasicDBObject();
 
 			DBObject updateExpandoValueDBObject = new BasicDBObject(
-				expandoColumn.getName(),
-				getData(expandoColumn, expandoValue));
+				expandoColumn.getName(), getData(expandoColumn, expandoValue));
 
 			operatorDBObject.put(MongoOperator.SET, updateExpandoValueDBObject);
 
@@ -113,6 +112,7 @@ public class MongoExpandoValueLocalServiceImpl
 			expandoValue.setValueId(valueId);
 
 			queryDBObject.put("valueId", valueId);
+
 			queryDBObject.put(
 				expandoColumn.getName(), getData(expandoColumn, expandoValue));
 

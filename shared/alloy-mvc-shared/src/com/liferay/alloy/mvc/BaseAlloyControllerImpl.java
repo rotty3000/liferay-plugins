@@ -226,7 +226,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		}
 
 		if ((alloyNotificationEventHelper != null) &&
-			!viewPath.equals(_VIEW_PATH_ERROR)) {
+			!viewPath.equals(VIEW_PATH_ERROR)) {
 
 			alloyNotificationEventHelper.addUserNotificationEvents(
 				request, controllerPath, actionPath,
@@ -403,7 +403,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		sb.append(portlet.getFriendlyURLMapping());
 		sb.append("/views/");
 
-		if (viewPath.equals(_VIEW_PATH_ERROR)) {
+		if (viewPath.equals(VIEW_PATH_ERROR)) {
 			sb.append("error.jsp");
 
 			return sb.toString();
@@ -733,6 +733,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 	protected void initClass() {
 		clazz = getClass();
+
 		classLoader = clazz.getClassLoader();
 	}
 
@@ -1099,7 +1100,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		portletRequest.setAttribute("pattern", pattern);
 		portletRequest.setAttribute("status", status);
 
-		render(_VIEW_PATH_ERROR);
+		render(VIEW_PATH_ERROR);
 	}
 
 	protected void renderError(int status, String pattern, Object... arguments)
@@ -1255,8 +1256,10 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 		alloySearchResult.setHits(hits);
 
-		alloySearchResult.setPortletURL(
-			portletURL, searchContext.getAttributes());
+		if (portletURL != null) {
+			alloySearchResult.setPortletURL(
+				portletURL, searchContext.getAttributes());
+		}
 
 		alloySearchResult.afterPropertiesSet();
 
@@ -1508,6 +1511,8 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected static final String CALLED_PROCESS_ACTION =
 		BaseAlloyControllerImpl.class.getName() + "#CALLED_PROCESS_ACTION";
 
+	protected static final String VIEW_PATH_ERROR = "VIEW_PATH_ERROR";
+
 	protected static Log log = LogFactoryUtil.getLog(
 		BaseAlloyControllerImpl.class);
 
@@ -1555,7 +1560,5 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected ThemeDisplay themeDisplay;
 	protected User user;
 	protected String viewPath;
-
-	private static final String _VIEW_PATH_ERROR = "VIEW_PATH_ERROR";
 
 }

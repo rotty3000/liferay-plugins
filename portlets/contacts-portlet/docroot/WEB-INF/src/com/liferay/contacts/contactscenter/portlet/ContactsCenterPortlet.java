@@ -569,7 +569,7 @@ public class ContactsCenterPortlet extends MVCPortlet {
 				message = "please-enter-a-valid-email-address";
 			}
 			else if (e instanceof NoSuchCountryException) {
-				message ="please-select-a-country";
+				message = "please-select-a-country";
 			}
 			else if (e instanceof NoSuchListTypeException) {
 				message = "please-select-a-type";
@@ -772,8 +772,7 @@ public class ContactsCenterPortlet extends MVCPortlet {
 				jsonArray.put(contactJSONObject);
 			}
 		}
-		else if (filterBy.equals(
-					ContactsConstants.FILTER_BY_FOLLOWERS) &&
+		else if (filterBy.equals(ContactsConstants.FILTER_BY_FOLLOWERS) &&
 				 !portletId.equals(PortletKeys.MEMBERS)) {
 
 			List<SocialRelation> socialRelations =
